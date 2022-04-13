@@ -10,6 +10,7 @@
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "MotionControllerComponent.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
@@ -296,5 +297,25 @@ bool APortal_GE_IICharacter::EnableTouchscreenMovement(class UInputComponent* Pl
 		return true;
 	}
 	
+	return false;
+}
+
+bool APortal_GE_IICharacter::PointingAtWall()
+{
+	if (GetWorld())
+	{
+		FRotator SpawnRotation = GetControlRotation();
+		FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+		FVector TargetLocation = SpawnLocation + FVector(0, 3000, 0);
+		FHitResult lineCastResult;
+		GetWorld()->LineTraceSingleByObjectType(lineCastResult, SpawnLocation, TargetLocation, ECC_WorldStatic);
+		UE_LOG(LogTemp, Warning, TEXT("%f"), SpawnRotation.Yaw);
+		if (lineCastResult.GetActor()->ActorHasTag("Wall"))
+		{
+			return true;
+			UE_LOG(LogTemp, Warning, TEXT("test"));
+		}
+		return false;
+	}
 	return false;
 }
