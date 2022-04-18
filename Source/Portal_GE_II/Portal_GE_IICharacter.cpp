@@ -301,7 +301,7 @@ bool APortal_GE_IICharacter::EnableTouchscreenMovement(class UInputComponent* Pl
 	return false;
 }
 
-bool APortal_GE_IICharacter::CanSpawnPortal(float fLinecastLength, FName sTag)
+bool APortal_GE_IICharacter::CanPortalSpawn(float fLinecastLength, FName sTag, float fPortalWidth, float fPortalHeight)
 {
 	if (GetWorld())
 	{
@@ -311,16 +311,50 @@ bool APortal_GE_IICharacter::CanSpawnPortal(float fLinecastLength, FName sTag)
 		// Line Trace to determine if the object the player is looking at is a wall that accepts portals
 		FHitResult result;
 
-		bool bWasLineCastSuccessful = GetWorld()->LineTraceSingleByChannel(result, LineCastStartLocation, (LineCastEndLocation * fLinecastLength) + LineCastStartLocation,
-			ECollisionChannel::ECC_Visibility);
+		bool bWasLineCastSuccessful = GetWorld()->LineTraceSingleByChannel(result, LineCastStartLocation, (LineCastEndLocation * fLinecastLength) + LineCastStartLocation,ECC_Visibility);
 
 		if (bWasLineCastSuccessful)
 		{
 			if (result.GetActor()->ActorHasTag(sTag) == true)
 			{
-				return true;
+				FHitResult hitResult;
+				//changes the X for the Y to create a new normal vector orthogonal to the wall
+				FVector vNewNormal = FVector(result.Normal.Y, result.Normal.X, result.Normal.Z);
+				FVector vZnormal = FVector(0, 0, 1);
+
+				//horizontal left line trace
+				bool bWasHorizontalLinecastNegativeSpaceSuccessful = GetWorld()->LineTraceSingleByChannel(
+					hitResult,
+					result.Location + result.Normal,
+					((result.Location + result.Normal) - (vNewNormal * (fPortalWidth / 2))),
+					ECC_Visibility);
+
+				//horizontal right line trace
+				bool bWasHorizontalLinecastPositiveSpaceSuccessful = GetWorld()->LineTraceSingleByChannel(
+					hitResult,
+					result.Location + result.Normal,
+					((vNewNormal * (fPortalWidth / 2)) + result.Location + result.Normal),
+					ECC_Visibility);
+
+				//Vertical top line Trace
+				bool bWasVerticalLinecastPositiveSpaceSuccessful = GetWorld()->LineTraceSingleByChannel(
+					hitResult,
+					result.Location + result.Normal,
+					((vZnormal * fPortalHeight) + (result.Location + result.Normal)),
+					ECC_Visibility);
+
+				//Vertical Bottom Line Trace
+				bool bWasVerticalLineCastNegativeSpaceSuccessful = GetWorld()->LineTraceSingleByChannel(
+					hitResult,
+					result.Location + result.Normal,
+					((result.Location + result.Normal) - (vZnormal * fPortalHeight)),
+					ECC_Visibility);
+
+				if (!bWasHorizontalLinecastNegativeSpaceSuccessful && !bWasHorizontalLinecastPositiveSpaceSuccessful && !bWasVerticalLineCastNegativeSpaceSuccessful && !bWasVerticalLinecastPositiveSpaceSuccessful)
+				{
+					return true;
+				}
 			}
-			return false;
 		}
 	}
 	return false;

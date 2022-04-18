@@ -150,11 +150,10 @@ private:
 /** checks if the player can spawn a portal 
 	@param fLinecastLength is the length the linecast should be 
 	@param sTag is the tag that the cast is searching for to return true
-
+	@param fPortalWidth is the portals' full width
 */
-
 	UFUNCTION(BlueprintCallable, Category = "Portal")
-		bool CanSpawnPortal(float fLinecastLength,	FName sTag);
+		bool CanPortalSpawn(float fLinecastLength,	FName sTag, float fPortalWidth, float fPortalHeight);
 
 };
 
