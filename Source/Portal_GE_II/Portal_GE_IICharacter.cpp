@@ -10,6 +10,8 @@
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "MotionControllerComponent.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Engine/World.h"
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
@@ -296,5 +298,30 @@ bool APortal_GE_IICharacter::EnableTouchscreenMovement(class UInputComponent* Pl
 		return true;
 	}
 	
+	return false;
+}
+
+bool APortal_GE_IICharacter::CanSpawnPortal(float fLinecastLength, FName sTag)
+{
+	if (GetWorld())
+	{
+		FVector LineCastEndLocation = GetControlRotation().Vector();
+		FVector LineCastStartLocation = FP_Gun->GetComponentLocation();
+
+		// Line Trace to determine if the object the player is looking at is a wall that accepts portals
+		FHitResult result;
+
+		bool bWasLineCastSuccessful = GetWorld()->LineTraceSingleByChannel(result, LineCastStartLocation, (LineCastEndLocation * fLinecastLength) + LineCastStartLocation,
+			ECollisionChannel::ECC_Visibility);
+
+		if (bWasLineCastSuccessful)
+		{
+			if (result.GetActor()->ActorHasTag(sTag) == true)
+			{
+				return true;
+			}
+			return false;
+		}
+	}
 	return false;
 }

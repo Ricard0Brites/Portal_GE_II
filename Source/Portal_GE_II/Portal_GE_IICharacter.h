@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include <string>
 #include "Portal_GE_IICharacter.generated.h"
 
 class UInputComponent;
@@ -24,11 +26,11 @@ class APortal_GE_IICharacter : public ACharacter
 	USkeletalMeshComponent* Mesh1P;
 
 	/** Gun mesh: 1st person view (seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta	= ( allowprivateaccess = true))
 	USkeletalMeshComponent* FP_Gun;
 
 	/** Location on gun mesh where projectiles should spawn. */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta	= (allowprivateaccess = true))
 	USceneComponent* FP_MuzzleLocation;
 
 	/** Gun mesh: VR view (attached to the VR controller directly, no arm, just the actual gun) */
@@ -56,7 +58,6 @@ public:
 
 protected:
 	virtual void BeginPlay();
-
 public:
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
@@ -143,6 +144,17 @@ public:
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+
+private:
+
+/** checks if the player can spawn a portal 
+	@param fLinecastLength is the length the linecast should be 
+	@param sTag is the tag that the cast is searching for to return true
+
+*/
+
+	UFUNCTION(BlueprintCallable, Category = "Portal")
+		bool CanSpawnPortal(float fLinecastLength,	FName sTag);
 
 };
 
