@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "MotionControllerComponent.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Engine/World.h"
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
@@ -300,22 +301,27 @@ bool APortal_GE_IICharacter::EnableTouchscreenMovement(class UInputComponent* Pl
 	return false;
 }
 
-bool APortal_GE_IICharacter::PointingAtWall()
+bool APortal_GE_IICharacter::CanSpawnPortal(float fLinecastLength, FName sTag)
 {
 	if (GetWorld())
 	{
-		FRotator SpawnRotation = GetControlRotation();
-		FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
-		FVector TargetLocation = SpawnLocation + FVector(0, 3000, 0);
-		FHitResult lineCastResult;
-		GetWorld()->LineTraceSingleByObjectType(lineCastResult, SpawnLocation, TargetLocation, ECC_WorldStatic);
-		UE_LOG(LogTemp, Warning, TEXT("%f"), SpawnRotation.Yaw);
-		if (lineCastResult.GetActor()->ActorHasTag("Wall"))
+		FVector LineCastEndLocation = GetControlRotation().Vector();
+		FVector LineCastStartLocation = FP_Gun->GetComponentLocation();
+
+		// Line Trace to determine if the object the player is looking at is a wall that accepts portals
+		FHitResult result;
+
+		bool bWasLineCastSuccessful = GetWorld()->LineTraceSingleByChannel(result, LineCastStartLocation, (LineCastEndLocation * fLinecastLength) + LineCastStartLocation,
+			ECollisionChannel::ECC_Visibility);
+
+		if (bWasLineCastSuccessful)
 		{
-			return true;
-			UE_LOG(LogTemp, Warning, TEXT("test"));
+			if (result.GetActor()->ActorHasTag(sTag) == true)
+			{
+				return true;
+			}
+			return false;
 		}
-		return false;
 	}
 	return false;
 }

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include <string>
 #include "Portal_GE_IICharacter.generated.h"
 
 class UInputComponent;
@@ -146,11 +147,14 @@ public:
 
 private:
 
-/** checks if the player is looking at a wall or any other actors */
+/** checks if the player can spawn a portal 
+	@param fLinecastLength is the length the linecast should be 
+	@param sTag is the tag that the cast is searching for to return true
+
+*/
+
 	UFUNCTION(BlueprintCallable, Category = "Portal")
-		bool PointingAtWall();
-	UPROPERTY(EditDefaultsOnly, Category = "HUD Widget", meta = (allowprivateaccess = true))
-		TSubclassOf<UWidget> HUDBlueprint;
+		bool CanSpawnPortal(float fLinecastLength,	FName sTag);
 
 };
 
