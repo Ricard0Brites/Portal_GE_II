@@ -25,6 +25,10 @@ class APortal_GE_IICharacter : public ACharacter
 	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
 	USkeletalMeshComponent* Mesh1P;
 
+	/** Pawn mesh: 3rd person view (full mesh ) */
+	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+		USkeletalMeshComponent* Mesh3P;
+
 	/** Gun mesh: 1st person view (seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta	= ( allowprivateaccess = true))
 	USkeletalMeshComponent* FP_Gun;

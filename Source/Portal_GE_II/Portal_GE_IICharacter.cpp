@@ -43,6 +43,13 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 	Mesh1P->SetRelativeRotation(FRotator(1.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 
+	// Create a mesh component that will be used when being viewed from a '3rd person' view (when viewing this pawn)
+	Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh3P"));
+	Mesh3P->SetOwnerNoSee(true);
+	Mesh3P->SetupAttachment(RootComponent);
+	Mesh3P->SetRelativeLocation(FVector(0,0,-90));
+	Mesh3P->SetRelativeRotation(FRotator(0,-90,0));
+
 	// Create a gun mesh component
 	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
 	FP_Gun->SetOnlyOwnerSee(false);			// otherwise won't be visible in the multiplayer
