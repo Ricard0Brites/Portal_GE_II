@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
-#include <string>
 #include "Portal_GE_IICharacter.generated.h"
 
 class UInputComponent;
