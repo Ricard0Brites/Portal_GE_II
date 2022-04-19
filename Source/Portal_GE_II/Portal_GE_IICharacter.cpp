@@ -43,13 +43,30 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 	Mesh1P->SetRelativeRotation(FRotator(1.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 
+	// Create a mesh component that will be used when being viewed from a '3rd person' view (when viewing this pawn)
+	Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh3P"));
+	Mesh3P->SetOwnerNoSee(true);
+	Mesh3P->SetupAttachment(RootComponent);
+	Mesh3P->SetRelativeLocation(FVector(0,0,-90));
+	Mesh3P->SetRelativeRotation(FRotator(0,-90,0));
+
 	// Create a gun mesh component
 	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
-	FP_Gun->SetOnlyOwnerSee(false);			// otherwise won't be visible in the multiplayer
+	FP_Gun->SetOnlyOwnerSee(true);			// otherwise won't be visible in the multiplayer
 	FP_Gun->bCastDynamicShadow = false;
 	FP_Gun->CastShadow = false;
 	// FP_Gun->SetupAttachment(Mesh1P, TEXT("GripPoint"));
 	FP_Gun->SetupAttachment(RootComponent);
+
+	// Create a gun mesh component
+	FP_Gun3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun3Person"));
+	FP_Gun3P->SetOwnerNoSee(true);			
+	FP_Gun3P->SetupAttachment(RootComponent);
+	FP_Gun3P->SetupAttachment(Mesh3P);
+	FP_Gun3P->AttachToComponent(Mesh3P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
+	FP_Gun3P->SetRelativeLocation(FVector(-11, 6, -2));
+	FP_Gun3P->SetRelativeRotation(FRotator(	0, 100, 0));
+
 
 	FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
 	FP_MuzzleLocation->SetupAttachment(FP_Gun);
@@ -57,33 +74,6 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 
 	// Default offset from the character location for projectiles to spawn
 	GunOffset = FVector(100.0f, 0.0f, 10.0f);
-
-	// Note: The ProjectileClass and the skeletal mesh/anim blueprints for Mesh1P, FP_Gun, and VR_Gun 
-	// are set in the derived blueprint asset named MyCharacter to avoid direct content references in C++.
-
-	// Create VR Controllers.
-	R_MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("R_MotionController"));
-	R_MotionController->MotionSource = FXRMotionControllerBase::RightHandSourceId;
-	R_MotionController->SetupAttachment(RootComponent);
-	L_MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("L_MotionController"));
-	L_MotionController->SetupAttachment(RootComponent);
-
-	// Create a gun and attach it to the right-hand VR controller.
-	// Create a gun mesh component
-	VR_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("VR_Gun"));
-	VR_Gun->SetOnlyOwnerSee(false);			// otherwise won't be visible in the multiplayer
-	VR_Gun->bCastDynamicShadow = false;
-	VR_Gun->CastShadow = false;
-	VR_Gun->SetupAttachment(R_MotionController);
-	VR_Gun->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
-
-	VR_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("VR_MuzzleLocation"));
-	VR_MuzzleLocation->SetupAttachment(VR_Gun);
-	VR_MuzzleLocation->SetRelativeLocation(FVector(0.000004, 53.999992, 10.000000));
-	VR_MuzzleLocation->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));		// Counteract the rotation of the VR gun model.
-
-	// Uncomment the following line to turn motion controllers on by default:
-	//bUsingMotionControllers = true;
 }
 
 void APortal_GE_IICharacter::BeginPlay()
@@ -97,12 +87,10 @@ void APortal_GE_IICharacter::BeginPlay()
 	// Show or hide the two versions of the gun based on whether or not we're using motion controllers.
 	if (bUsingMotionControllers)
 	{
-		VR_Gun->SetHiddenInGame(false, true);
 		Mesh1P->SetHiddenInGame(true, true);
 	}
 	else
 	{
-		VR_Gun->SetHiddenInGame(true, true);
 		Mesh1P->SetHiddenInGame(false, true);
 	}
 }
@@ -150,8 +138,8 @@ void APortal_GE_IICharacter::OnFire()
 		{
 			if (bUsingMotionControllers)
 			{
-				const FRotator SpawnRotation = VR_MuzzleLocation->GetComponentRotation();
-				const FVector SpawnLocation = VR_MuzzleLocation->GetComponentLocation();
+				const FRotator SpawnRotation = FP_MuzzleLocation->GetComponentRotation();
+				const FVector SpawnLocation = FP_MuzzleLocation->GetComponentLocation();
 				World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
 			}
 			else
@@ -301,7 +289,7 @@ bool APortal_GE_IICharacter::EnableTouchscreenMovement(class UInputComponent* Pl
 	return false;
 }
 
-bool APortal_GE_IICharacter::CanSpawnPortal(float fLinecastLength, FName sTag)
+bool APortal_GE_IICharacter::CanPortalSpawn(float fLinecastLength, FName sTag, float fPortalWidth, float fPortalHeight)
 {
 	if (GetWorld())
 	{
@@ -311,16 +299,50 @@ bool APortal_GE_IICharacter::CanSpawnPortal(float fLinecastLength, FName sTag)
 		// Line Trace to determine if the object the player is looking at is a wall that accepts portals
 		FHitResult result;
 
-		bool bWasLineCastSuccessful = GetWorld()->LineTraceSingleByChannel(result, LineCastStartLocation, (LineCastEndLocation * fLinecastLength) + LineCastStartLocation,
-			ECollisionChannel::ECC_Visibility);
+		bool bWasLineCastSuccessful = GetWorld()->LineTraceSingleByChannel(result, LineCastStartLocation, (LineCastEndLocation * fLinecastLength) + LineCastStartLocation,ECC_Visibility);
 
 		if (bWasLineCastSuccessful)
 		{
 			if (result.GetActor()->ActorHasTag(sTag) == true)
 			{
-				return true;
+				FHitResult hitResult;
+				//changes the X for the Y to create a new normal vector orthogonal to the wall
+				FVector vNewNormal = FVector(result.Normal.Y, result.Normal.X, result.Normal.Z);
+				FVector vZnormal = FVector(0, 0, 1);
+
+				//horizontal left line trace
+				bool bWasHorizontalLinecastNegativeSpaceSuccessful = GetWorld()->LineTraceSingleByChannel(
+					hitResult,
+					result.Location + result.Normal,
+					((result.Location + result.Normal) - (vNewNormal * (fPortalWidth / 2))),
+					ECC_Visibility);
+
+				//horizontal right line trace
+				bool bWasHorizontalLinecastPositiveSpaceSuccessful = GetWorld()->LineTraceSingleByChannel(
+					hitResult,
+					result.Location + result.Normal,
+					((vNewNormal * (fPortalWidth / 2)) + result.Location + result.Normal),
+					ECC_Visibility);
+
+				//Vertical top line Trace
+				bool bWasVerticalLinecastPositiveSpaceSuccessful = GetWorld()->LineTraceSingleByChannel(
+					hitResult,
+					result.Location + result.Normal,
+					((vZnormal * fPortalHeight) + (result.Location + result.Normal)),
+					ECC_Visibility);
+
+				//Vertical Bottom Line Trace
+				bool bWasVerticalLineCastNegativeSpaceSuccessful = GetWorld()->LineTraceSingleByChannel(
+					hitResult,
+					result.Location + result.Normal,
+					((result.Location + result.Normal) - (vZnormal * fPortalHeight)),
+					ECC_Visibility);
+
+				if (!bWasHorizontalLinecastNegativeSpaceSuccessful && !bWasHorizontalLinecastPositiveSpaceSuccessful && !bWasVerticalLineCastNegativeSpaceSuccessful && !bWasVerticalLinecastPositiveSpaceSuccessful)
+				{
+					return true;
+				}
 			}
-			return false;
 		}
 	}
 	return false;
