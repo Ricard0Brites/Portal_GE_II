@@ -25,13 +25,13 @@ protected:
 	//portal blueprint reference (to spawn later on)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Portal", meta = (allowprivateaccess = true))
 		TSubclassOf<APortalClass> portalBPRef;
-
+public:
 	/*
 	* PortalType = True ----> Blue portal
 	* PortalType = False ---> Orange Portal
 	
 	*/
-	void SpawnPortal(bool bPortalType);
+	static void SpawnPortal(bool bPortalType);
 #pragma endregion
 
 };

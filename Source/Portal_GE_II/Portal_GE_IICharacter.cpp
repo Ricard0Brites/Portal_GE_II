@@ -12,6 +12,7 @@
 #include "MotionControllerComponent.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Engine/World.h"
+#include "PortalManager.h"
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
@@ -94,6 +95,7 @@ void APortal_GE_IICharacter::Tick(float DeltaTime)
 	bCanPortalSpawn = CanPortalSpawn(lineCastLength, climbableTag, portalWidth, portalHeight);
 
 }
+
 #pragma region Input
 
 void APortal_GE_IICharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -124,6 +126,7 @@ void APortal_GE_IICharacter::SetupPlayerInputComponent(class UInputComponent* Pl
 
 void APortal_GE_IICharacter::OnFireLeft()
 {
+#pragma region SpawnProjectile
 	// try and fire a projectile
 	if (ProjectileClass != nullptr)
 	{
@@ -139,9 +142,11 @@ void APortal_GE_IICharacter::OnFireLeft()
 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 
 			// spawn the projectile at the muzzle
-			World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			APortal_GE_IIProjectile* spawnedProjectile = World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			spawnedProjectile->bPortalTypeToSpawn = true;
 		}
 	}
+#pragma endregion
 
 	// try and play the sound if specified
 	if (FireSound != nullptr)
@@ -163,6 +168,7 @@ void APortal_GE_IICharacter::OnFireLeft()
 
 void APortal_GE_IICharacter::OnFireRight()
 {
+#pragma region SpawnProjectile
 	// try and fire a projectile
 	if (ProjectileClass != nullptr)
 	{
@@ -178,9 +184,11 @@ void APortal_GE_IICharacter::OnFireRight()
 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 
 			// spawn the projectile at the muzzle
-			World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			APortal_GE_IIProjectile *spawnedProjectile = World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			spawnedProjectile->bPortalTypeToSpawn = false;
 		}
 	}
+#pragma endregion
 
 	// try and play the sound if specified
 	if (FireSound != nullptr)

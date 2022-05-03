@@ -2,6 +2,7 @@
 
 #include "Portal_GE_IIProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "PortalManager.h"
 #include "Components/SphereComponent.h"
 
 APortal_GE_IIProjectile::APortal_GE_IIProjectile() 
@@ -36,6 +37,7 @@ void APortal_GE_IIProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherA
 	// Only add impulse and destroy projectile if we hit a physics
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
 	{
+		APortalManager::SpawnPortal(bPortalTypeToSpawn);
 		Destroy();
 	}
 }
