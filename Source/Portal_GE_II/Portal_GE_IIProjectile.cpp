@@ -37,7 +37,7 @@ void APortal_GE_IIProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherA
 	// Only add impulse and destroy projectile if we hit a physics
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
 	{
-		APortalManager::SpawnPortal(bPortalTypeToSpawn);
+		APortalManager::SpawnPortal(bPortalTypeToSpawn, Hit.Location);
 		Destroy();
 	}
 }

@@ -21,16 +21,18 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-
+#pragma region Components
 protected:
+	// Mesh Components
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (blueprintprotected = true))
 		UStaticMeshComponent* portalOuterRing;
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (blueprintprotected = true))
 		UStaticMeshComponent* portalInnerRing;
+
+public:
+	//Scene Capture Component
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (blueprintprotected = true))
 		USceneCaptureComponent2D* sceneCapture;
+#pragma endregion
+
 };

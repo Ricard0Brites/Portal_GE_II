@@ -31,7 +31,7 @@ public:
 	* PortalType = False ---> Orange Portal
 	
 	*/
-	static void SpawnPortal(bool bPortalType);
+	static void SpawnPortal(bool bPortalType, FVector Location);
 #pragma endregion
 
 };

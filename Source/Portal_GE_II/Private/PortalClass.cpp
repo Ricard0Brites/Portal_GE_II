@@ -39,10 +39,3 @@ void APortalClass::BeginPlay()
 	
 }
 
-// Called every frame
-void APortalClass::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-

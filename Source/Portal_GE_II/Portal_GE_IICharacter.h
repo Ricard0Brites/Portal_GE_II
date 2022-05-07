@@ -20,8 +20,9 @@ class APortal_GE_IICharacter : public ACharacter
 {
 	GENERATED_BODY()
 
-	/** Pawn mesh: 1st person view (arms; seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category=Mesh, meta	= (allowprivateaccess = true))
+#pragma region Components
+		/** Pawn mesh: 1st person view (arms; seen only by self) */
+		UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = Mesh, meta = (allowprivateaccess = true))
 		USkeletalMeshComponent* Mesh1P;
 
 	/** Pawn mesh: 3rd person view (full mesh ) */
@@ -29,7 +30,7 @@ class APortal_GE_IICharacter : public ACharacter
 		USkeletalMeshComponent* Mesh3P;
 
 	/** Gun mesh: 1st person view (seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta	= ( allowprivateaccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (allowprivateaccess = true))
 		USkeletalMeshComponent* FP_Gun;
 
 	/** Gun mesh: 3st person view (seen only by self) */
@@ -37,12 +38,14 @@ class APortal_GE_IICharacter : public ACharacter
 		USkeletalMeshComponent* FP_Gun3P;
 
 	/** Location on gun mesh where projectiles should spawn. */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta	= (allowprivateaccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (allowprivateaccess = true))
 		USceneComponent* FP_MuzzleLocation;
 
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		UCameraComponent* FirstPersonCameraComponent;
+#pragma endregion
+
 
 public:
 	APortal_GE_IICharacter();
@@ -50,6 +53,7 @@ public:
 protected:
 	virtual void BeginPlay();
 	virtual void Tick(float DeltaTime);
+
 public:
 #pragma region Default
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
@@ -81,6 +85,10 @@ public:
 protected:
 	
 #pragma region Inputs
+	// APawn interface
+	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
+	// End of APawn interface
+
 	/** Fires a projectile or a portal */
 	void OnFireLeft();
 	/** Fires a projectile or a portal */
@@ -90,7 +98,7 @@ protected:
 	/** Handles moving forward/backward */
 	void MoveForward(float Val);
 
-	/** Handles stafing movement, left and right */
+	/** Handles strafing movement, left and right */
 	void MoveRight(float Val);
 
 	/**
@@ -106,28 +114,27 @@ protected:
 	void LookUpAtRate(float Rate);
 #pragma endregion
 
-	
-protected:
-	// APawn interface
-	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
-	// End of APawn interface
-
 public:
+#pragma region DefaultFunctions
 	/** Returns Mesh1P subobject **/
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+#pragma endregion
+
 
 private:
 	
 #pragma region PortalCrosshairCheck
 
-	/** checks if the player can spawn a portal
-		@param fLinecastLength is the length the linecast should be
-		@param sTag is the tag that the cast is searching for to return true
-		@param fPortalWidth is the portals' full width
+	/** 
+	*	checks if the player can spawn a portal
+	* 
+	*	@param fLinecastLength is the length the line cast should be
+	*	@param sTag is the tag that the cast is searching for to return true
+	*	@param fPortalWidth is the portals' full width
+	* 
 	*/
-
 	bool CanPortalSpawn(float fLinecastLength, FName sTag, float fPortalWidth, float fPortalHeight);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Portal", meta = (allowprivateaccess = true))

@@ -86,7 +86,7 @@ void APortal_GE_IICharacter::BeginPlay()
 	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
 
 	// Show or hide the two versions of the gun based on whether or not we're using motion controllers.
-		Mesh1P->SetHiddenInGame(false, true);
+	Mesh1P->SetHiddenInGame(false, true);
 }
 
 void APortal_GE_IICharacter::Tick(float DeltaTime)
@@ -126,7 +126,6 @@ void APortal_GE_IICharacter::SetupPlayerInputComponent(class UInputComponent* Pl
 
 void APortal_GE_IICharacter::OnFireLeft()
 {
-#pragma region SpawnProjectile
 	// try and fire a projectile
 	if (ProjectileClass != nullptr)
 	{
@@ -143,10 +142,9 @@ void APortal_GE_IICharacter::OnFireLeft()
 
 			// spawn the projectile at the muzzle
 			APortal_GE_IIProjectile* spawnedProjectile = World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-			spawnedProjectile->bPortalTypeToSpawn = true;
+			spawnedProjectile->bPortalTypeToSpawn = true; // Blue Portal
 		}
 	}
-#pragma endregion
 
 	// try and play the sound if specified
 	if (FireSound != nullptr)
@@ -168,7 +166,7 @@ void APortal_GE_IICharacter::OnFireLeft()
 
 void APortal_GE_IICharacter::OnFireRight()
 {
-#pragma region SpawnProjectile
+
 	// try and fire a projectile
 	if (ProjectileClass != nullptr)
 	{
@@ -185,10 +183,9 @@ void APortal_GE_IICharacter::OnFireRight()
 
 			// spawn the projectile at the muzzle
 			APortal_GE_IIProjectile *spawnedProjectile = World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-			spawnedProjectile->bPortalTypeToSpawn = false;
+			spawnedProjectile->bPortalTypeToSpawn = false; //Orange Portal
 		}
 	}
-#pragma endregion
 
 	// try and play the sound if specified
 	if (FireSound != nullptr)

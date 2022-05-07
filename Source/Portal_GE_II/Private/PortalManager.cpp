@@ -18,7 +18,7 @@ void APortalManager::BeginPlay()
 	
 }
 
-void APortalManager::SpawnPortal(bool bPortalType)
+void APortalManager::SpawnPortal(bool bPortalType, FVector Location)
 {
 
 }
