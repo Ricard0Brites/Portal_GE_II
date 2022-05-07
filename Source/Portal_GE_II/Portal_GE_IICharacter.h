@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Portal_GE_IICharacter.generated.h"
 
 class UInputComponent;
@@ -152,6 +153,12 @@ private:
 	UPROPERTY(BlueprintReadOnly, Category = "Portal", meta = (allowprivateaccess = true))
 		bool bCanPortalSpawn;
 #pragma endregion
+
+#pragma region PortalSpawnRotation
+public:
+	FRotator portalSpawnRotation;
+#pragma endregion
+
 
 };
 

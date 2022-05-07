@@ -4,6 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Kismet/GameplayStatics.h"
+#include "PortalManager.h"
+#include "GameFramework/ProjectileMovementComponent.h"
+#include "Components/SphereComponent.h"
 #include "Portal_GE_IIProjectile.generated.h"
 
 class USphereComponent;
@@ -24,6 +28,18 @@ class APortal_GE_IIProjectile : public AActor
 		UProjectileMovementComponent* ProjectileMovement;
 #pragma endregion
 
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+private:
+#pragma region CastingReferences
+	//the reference to the Subclass
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Portal", meta = (allowprivateaccess = true))
+		TSubclassOf<APortalManager> portalManagerBpRef;
+	// the reference to the actual portal BP
+	APortalManager* asPortalManager;
+#pragma endregion
 
 public:
 	APortal_GE_IIProjectile();

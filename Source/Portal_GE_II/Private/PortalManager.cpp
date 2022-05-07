@@ -15,11 +15,20 @@ APortalManager::APortalManager()
 void APortalManager::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	GetWorld() ? asPlayerCharacter = Cast<APortal_GE_IICharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)) : 0;
 }
 
 void APortalManager::SpawnPortal(bool bPortalType, FVector Location)
 {
+	if (GetWorld())
+	{
+		GetWorld()->SpawnActor<APortalClass>(portalBPRef, Location, GetPortalSpawnRotation());
+	}
+}
 
+FRotator APortalManager::GetPortalSpawnRotation()
+{
+	return asPlayerCharacter->portalSpawnRotation;
 }
 

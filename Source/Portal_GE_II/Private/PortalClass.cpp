@@ -15,8 +15,8 @@ APortalClass::APortalClass()
 	//creates the outer ring static mesh component (used as the colored ring)
 	portalOuterRing = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Outer Ring Mesh"));
 	portalOuterRing->SetupAttachment(RootComponent);
-	portalOuterRing->SetRelativeScale3D(FVector(70.0f, 7.0f, 70.0f));
-	portalOuterRing->SetRelativeRotation(FRotator(-90.0f,0.0f,180.0f));
+	portalOuterRing->SetRelativeScale3D(FVector(70.0f, 70.0f, 70.0f));
+	portalOuterRing->SetRelativeRotation(FRotator(-90.0f,0.0f,0));
 
 
 	//creates the inside ring static mesh component (used as the actual portal itself)
