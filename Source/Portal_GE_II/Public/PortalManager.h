@@ -55,7 +55,7 @@ public:
 #pragma region PortalInformationAndState
 private:
 	// this variable keeps the state of the portal
-	bool isBluePortalActive = false, isOrangePortalActive = true;
+	bool isBluePortalActive = false, isOrangePortalActive = false;
 	
 	//this variable keeps the portal reference
 	APortalClass* bluePortalRef, * orangePortalRef;

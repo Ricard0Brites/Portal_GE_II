@@ -25,13 +25,47 @@ void APortalManager::SpawnPortal(bool bPortalType, FVector Location)
 	{
 		if (bPortalType) //blue portal
 		{
+			// if the blue portal is active its destroyed
+			if (isBluePortalActive)
+			{
+				//if the object isn't pending kill already, its destroyed
+				if (!bluePortalRef->IsPendingKill())
+				{
+					bluePortalRef->Destroy();
+				}
+				isBluePortalActive = false;
+			}
+
+			//spawns the portal
 			bluePortalRef = GetWorld()->SpawnActor<APortalClass>(portalBPRef, Location, GetPortalSpawnRotation());
+			//assigns the blue color
 			bluePortalRef->SetPortalColor(FLinearColor(.0f, 0.35f, 1.f, 1.f));
+
+
+			//sets the portal state (avoids multiple blue portals)
+			isBluePortalActive = true;
 		}
-		else if (!bPortalType)
+		if (!bPortalType)
 		{
+			//if the orange portal is active it is destroyed
+			if (isOrangePortalActive)
+			{
+				//if the object isn't pending kill already, its destroyed
+				if (!orangePortalRef->IsPendingKill())
+				{
+					orangePortalRef->Destroy();
+				}
+				isOrangePortalActive = false;
+			}
+
+			//spawns the portal
 			orangePortalRef = GetWorld()->SpawnActor<APortalClass>(portalBPRef, Location, GetPortalSpawnRotation());
+			//assigns the orange color
 			orangePortalRef->SetPortalColor(FLinearColor(1.f, 0.35f, .0f, 1.f));
+
+
+			//sets the portal state (avoids multiple blue portals)
+			isOrangePortalActive = true;
 		}
 	}
 }
@@ -40,4 +74,3 @@ FRotator APortalManager::GetPortalSpawnRotation()
 {
 	return asPlayerCharacter->portalSpawnRotation;
 }
-
