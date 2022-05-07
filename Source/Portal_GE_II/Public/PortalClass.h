@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "PortalManager.h"
 #include "PortalClass.generated.h"
 
 UCLASS()
@@ -37,6 +38,17 @@ public:
 
 #pragma region SpawnParameters
 private:
+
+	/*
+	* true = Blue
+	* false = orange
+	*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Portal Parameters", meta = (allowprivateaccess = true))
+		bool myPortalType;
+public:
+	void SetPortalType(bool type) { myPortalType = type; };
+private:
+
 	//this variable sets the portal color
 	FLinearColor portalColor;
 

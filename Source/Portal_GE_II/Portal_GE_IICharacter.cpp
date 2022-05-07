@@ -126,34 +126,36 @@ void APortal_GE_IICharacter::SetupPlayerInputComponent(class UInputComponent* Pl
 
 void APortal_GE_IICharacter::OnFireLeft()
 {
-	// try and fire a projectile
-	if (ProjectileClass != nullptr)
+	if (bCanPortalSpawn)
 	{
-		UWorld* const World = GetWorld();
-		if (World != nullptr)
+		// try and fire a projectile
+		if (ProjectileClass != nullptr)
 		{
-			const FRotator SpawnRotation = GetControlRotation();
-			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+			UWorld* const World = GetWorld();
+			if (World != nullptr)
+			{
+				const FRotator SpawnRotation = GetControlRotation();
+				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
 
-			//Set Spawn Collision Handling Override
-			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+				//Set Spawn Collision Handling Override
+				FActorSpawnParameters ActorSpawnParams;
+				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 
-			// spawn the projectile at the muzzle
-			APortal_GE_IIProjectile* spawnedProjectile = World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-			spawnedProjectile->bPortalTypeToSpawn = true; // Blue Portal
+				// spawn the projectile at the muzzle
+				APortal_GE_IIProjectile* spawnedProjectile = World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+				spawnedProjectile->bPortalTypeToSpawn = true; // Blue Portal
+			}
 		}
-	}
 
-	// try and play the sound if specified
-	if (FireSound != nullptr)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-	}
+		// try and play the sound if specified
+		if (FireSound != nullptr)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+		}
 
-	// try and play a firing animation if specified
-	if (FireAnimation != nullptr)
+		// try and play a firing animation if specified
+		if (FireAnimation != nullptr)
 		{
 			// Get the animation object for the arms mesh
 			UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
@@ -162,6 +164,8 @@ void APortal_GE_IICharacter::OnFireLeft()
 				AnimInstance->Montage_Play(FireAnimation, 1.f);
 			}
 		}
+	}
+	
 }
 
 void APortal_GE_IICharacter::OnFireRight()

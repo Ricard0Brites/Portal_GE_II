@@ -23,7 +23,8 @@ void APortalManager::SpawnPortal(bool bPortalType, FVector Location)
 {
 	if (GetWorld())
 	{
-		if (bPortalType) //blue portal
+		//blue portal
+		if (bPortalType) 
 		{
 			// if the blue portal is active its destroyed
 			if (isBluePortalActive)
@@ -40,11 +41,15 @@ void APortalManager::SpawnPortal(bool bPortalType, FVector Location)
 			bluePortalRef = GetWorld()->SpawnActor<APortalClass>(portalBPRef, Location, GetPortalSpawnRotation());
 			//assigns the blue color
 			bluePortalRef->SetPortalColor(FLinearColor(.0f, 0.35f, 1.f, 1.f));
+			//assigns the portal its type
+			bluePortalRef->SetPortalType(bPortalType);
 
 
 			//sets the portal state (avoids multiple blue portals)
 			isBluePortalActive = true;
 		}
+		
+		//orange portal
 		if (!bPortalType)
 		{
 			//if the orange portal is active it is destroyed
@@ -62,7 +67,8 @@ void APortalManager::SpawnPortal(bool bPortalType, FVector Location)
 			orangePortalRef = GetWorld()->SpawnActor<APortalClass>(portalBPRef, Location, GetPortalSpawnRotation());
 			//assigns the orange color
 			orangePortalRef->SetPortalColor(FLinearColor(1.f, 0.35f, .0f, 1.f));
-
+			//assigns the portal its type
+			orangePortalRef->SetPortalType(bPortalType);
 
 			//sets the portal state (avoids multiple blue portals)
 			isOrangePortalActive = true;

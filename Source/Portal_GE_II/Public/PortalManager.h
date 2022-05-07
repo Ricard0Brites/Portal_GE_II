@@ -52,13 +52,27 @@ public:
 	FRotator GetPortalSpawnRotation();
 #pragma endregion
 
-#pragma region PortalInformationAndState
 private:
+#pragma region PortalState
+
 	// this variable keeps the state of the portal
 	bool isBluePortalActive = false, isOrangePortalActive = false;
-	
+
+public:
+	UFUNCTION(BlueprintPure, Category = "Portal State")
+		bool GetIsBluePortalActive() { return isBluePortalActive; };
+	UFUNCTION(BlueprintPure, Category = "Portal State")
+		bool GetIsOrangePortalActive() { return isOrangePortalActive; };
+
+#pragma endregion
+
+#pragma region PortalColor
+
 	//this variable keeps the portal reference
 	APortalClass* bluePortalRef, * orangePortalRef;
+
+#pragma endregion
+
 
 public:
 	//actor reference getters
@@ -67,7 +81,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Portal")
 		APortalClass* GetOrangePortalRef() { return orangePortalRef; };
 
-#pragma endregion
+
 
 
 };
