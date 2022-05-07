@@ -23,7 +23,16 @@ void APortalManager::SpawnPortal(bool bPortalType, FVector Location)
 {
 	if (GetWorld())
 	{
-		GetWorld()->SpawnActor<APortalClass>(portalBPRef, Location, GetPortalSpawnRotation());
+		if (bPortalType) //blue portal
+		{
+			bluePortalRef = GetWorld()->SpawnActor<APortalClass>(portalBPRef, Location, GetPortalSpawnRotation());
+			bluePortalRef->SetPortalColor(FLinearColor(.0f, 0.35f, 1.f, 1.f));
+		}
+		else if (!bPortalType)
+		{
+			orangePortalRef = GetWorld()->SpawnActor<APortalClass>(portalBPRef, Location, GetPortalSpawnRotation());
+			orangePortalRef->SetPortalColor(FLinearColor(1.f, 0.35f, .0f, 1.f));
+		}
 	}
 }
 

@@ -35,4 +35,18 @@ public:
 		USceneCaptureComponent2D* sceneCapture;
 #pragma endregion
 
+#pragma region SpawnParameters
+private:
+	//this variable sets the portal color
+	FLinearColor portalColor;
+
+
+public:
+
+	UFUNCTION(BlueprintCallable, Category = "Portal")
+		FLinearColor GetPortalColor() { return portalColor; };
+
+	void SetPortalColor(FLinearColor color) { portalColor = color; };
+#pragma endregion
+
 };

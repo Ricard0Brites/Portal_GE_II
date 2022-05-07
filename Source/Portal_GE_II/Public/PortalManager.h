@@ -56,8 +56,17 @@ public:
 private:
 	// this variable keeps the state of the portal
 	bool isBluePortalActive = false, isOrangePortalActive = true;
+	
 	//this variable keeps the portal reference
 	APortalClass* bluePortalRef, * orangePortalRef;
+
+public:
+	//actor reference getters
+	UFUNCTION(BlueprintPure, Category="Portal")
+		APortalClass* GetBluePortalRef() { return bluePortalRef; };
+	UFUNCTION(BlueprintPure, Category = "Portal")
+		APortalClass* GetOrangePortalRef() { return orangePortalRef; };
+
 #pragma endregion
 
 
