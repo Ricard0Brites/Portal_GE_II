@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "PortalClass.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "../Portal_GE_IICharacter.h"
 #include "PortalManager.generated.h"
 
@@ -75,13 +76,34 @@ public:
 
 
 public:
+#pragma region ActorReferences
 	//actor reference getters
-	UFUNCTION(BlueprintPure, Category="Portal")
+	UFUNCTION(BlueprintPure, Category = "Portal")
 		APortalClass* GetBluePortalRef() { return bluePortalRef; };
 	UFUNCTION(BlueprintPure, Category = "Portal")
 		APortalClass* GetOrangePortalRef() { return orangePortalRef; };
+#pragma endregion
 
 
+#pragma region PortalCameraRotation
+private:
+	FRotator bluePortalCameraRotation, orangePortalCameraRotation;
+public:
+
+	//calculates the angle between the player and the portal
+	FRotator CalculateAngleBetweenCharacterAndPortal(APortalClass* portalReference);
+
+	//blue portal getter and setter
+	void SetBluePortalCameraRotation(FRotator payload);
+	FRotator GetBluePortalCameraRotation() { return bluePortalCameraRotation; };
 
 
+	//orange portal getter and setter
+	void SetOrangePortalCameraRotation(FRotator payload);
+	FRotator GetOrangePortalCameraRotation() { return orangePortalCameraRotation; };
+#pragma endregion
+
+#pragma region Math
+	float GetVectorLength(FVector payload);
+#pragma endregion
 };

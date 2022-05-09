@@ -80,3 +80,42 @@ FRotator APortalManager::GetPortalSpawnRotation()
 {
 	return asPlayerCharacter->portalSpawnRotation;
 }
+
+#pragma region PortalCameraRotation
+FRotator APortalManager::CalculateAngleBetweenCharacterAndPortal(APortalClass* portalReference)
+{
+	// vector u = character location - portal location 
+	// formula: u = b - a
+	FVector u = asPlayerCharacter->GetActorLocation() - GetActorLocation();
+	// v = portal right vector
+	FVector v = portalReference->GetActorRightVector();
+
+	// uses a worked version of the formula u.v = |u|.|v| X cos(u ^ v)
+	return FRotator(0, 0, UKismetMathLibrary::Acos((FVector::DotProduct(u, v)) / (GetVectorLength(u) * GetVectorLength(v))));
+}
+
+void APortalManager::SetBluePortalCameraRotation(FRotator payload)
+{
+	if (bluePortalRef)
+	{
+		bluePortalRef->sceneCapture->SetRelativeRotation(FRotator(0, payload.Yaw, 0));
+	}
+}
+
+void APortalManager::SetOrangePortalCameraRotation(FRotator payload)
+{
+	if (orangePortalRef)
+	{
+		orangePortalRef->sceneCapture->SetRelativeRotation(FRotator(0, payload.Yaw, 0));
+	}
+}
+#pragma endregion
+
+#pragma region Math
+float APortalManager::GetVectorLength(FVector payload)
+{
+	return UKismetMathLibrary::Sqrt((UKismetMathLibrary::Square(payload.X)) + (UKismetMathLibrary::Square(payload.Y)) + (UKismetMathLibrary::Square(payload.Z)));
+}
+#pragma endregion
+
+

@@ -6,8 +6,12 @@
 #include "GameFramework/Actor.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
-#include "PortalManager.h"
+#include "../Public/PortalManager.h"
+#include "../Portal_GE_IICharacter.h"
+#include "../Portal_GE_IIProjectile.h"
 #include "PortalClass.generated.h"
+
+class APortalManager;
 
 UCLASS()
 class PORTAL_GE_II_API APortalClass : public AActor
@@ -21,6 +25,16 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void Tick(float deltaTime) override;
+
+#pragma region Casting
+	APortal_GE_IICharacter* asPlayerCharacter = nullptr;
+	
+	UPROPERTY(EditAnywhere, category = "Casting", meta = (allowprivateaccess = true))
+		TSubclassOf<APortalManager> portalManagerBpRef;
+	APortalManager* asPortalManager;
+
+#pragma endregion
 
 #pragma region Components
 protected:

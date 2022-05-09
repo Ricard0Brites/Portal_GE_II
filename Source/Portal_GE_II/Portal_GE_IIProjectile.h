@@ -12,12 +12,32 @@
 
 class USphereComponent;
 class UProjectileMovementComponent;
+class APortalManager;
 
 UCLASS(config=Game)
 class APortal_GE_IIProjectile : public AActor
 {
 	GENERATED_BODY()
 
+
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+
+	APortal_GE_IIProjectile();
+
+public:
+#pragma region CastingReferences
+	//the reference to the Subclass
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Portal", meta = (allowprivateaccess = true))
+		TSubclassOf<APortalManager> portalManagerBpRef;
+	// the reference to the actual portal BP
+	APortalManager* asPortalManager;
+#pragma endregion
+
+protected:
 #pragma region Components
 		/** Sphere collision component */
 		UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
@@ -27,22 +47,6 @@ class APortal_GE_IIProjectile : public AActor
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 		UProjectileMovementComponent* ProjectileMovement;
 #pragma endregion
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-private:
-#pragma region CastingReferences
-	//the reference to the Subclass
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Portal", meta = (allowprivateaccess = true))
-		TSubclassOf<APortalManager> portalManagerBpRef;
-	// the reference to the actual portal BP
-	APortalManager* asPortalManager;
-#pragma endregion
-
-public:
-	APortal_GE_IIProjectile();
 
 	/** called when projectile hits something */
 	UFUNCTION()
@@ -57,8 +61,10 @@ public:
 
 
 #pragma region PortalParameters
+public:
 	// Saves which type of portal should spawn
 	bool bPortalTypeToSpawn;
+	bool bCanPortalSpawn = false;
 #pragma endregion
 
 
