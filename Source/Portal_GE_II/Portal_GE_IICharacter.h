@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Math/UnrealMathUtility.h"
+#include "GameFramework/MovementComponent.h"
 #include "Portal_GE_IICharacter.generated.h"
 
 class UInputComponent;
@@ -159,6 +161,10 @@ public:
 	FRotator portalSpawnRotation;
 #pragma endregion
 
+public:
+
+	UPROPERTY(BlueprintReadWrite)
+	UMovementComponent* movementComp;
 
 };
 

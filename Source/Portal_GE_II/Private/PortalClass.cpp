@@ -17,15 +17,13 @@ APortalClass::APortalClass()
 	//creates the outer ring static mesh component (used as the colored ring)
 	portalOuterRing = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Outer Ring Mesh"));
 	portalOuterRing->SetupAttachment(RootComponent);
-	portalOuterRing->SetRelativeScale3D(FVector(100.0f, 100.0f, 100.0f));
+	portalOuterRing->SetRelativeScale3D(FVector(70, 70, 70));
 	portalOuterRing->SetRelativeRotation(FRotator(-90.0f, 0.0f, 0));
-
-
 
 	//creates the inside ring static mesh component (used as the actual portal itself)
 	portalInnerRing = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Inner Ring Mesh"));
 	portalInnerRing->SetupAttachment(RootComponent);
-	portalInnerRing->SetRelativeScale3D(FVector(100.0f, 100.0f, 100.0f));
+	portalInnerRing->SetRelativeScale3D(FVector(70,70,70));
 	portalInnerRing->SetRelativeRotation(FRotator(90.0f, 180.0f, 0.0f));
 	portalInnerRing->SetRelativeLocation(FVector(-3.0f, 0.0f, 0.0f));
 
@@ -33,6 +31,13 @@ APortalClass::APortalClass()
 	sceneCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("Scene Capture Component"));
 	sceneCapture->SetupAttachment(RootComponent);
 	sceneCapture->SetRelativeLocation(FVector(10.0f, 0.0f, 0.0f));
+
+	//create capsule component
+	capsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule"));
+	capsuleComponent->SetupAttachment(RootComponent);
+	capsuleComponent->SetRelativeLocation(FVector(-25, 0, 0));
+	capsuleComponent->SetCapsuleHalfHeight(130);
+	capsuleComponent->SetCapsuleRadius(70);
 }
 
 // Called when the game starts or when spawned
@@ -43,7 +48,7 @@ void APortalClass::BeginPlay()
 	//Component begin overlap
 	portalOuterRing->OnComponentBeginOverlap.AddDynamic(this, &APortalClass::BeginOverlap);
 	//component end overlap
-	portalOuterRing->OnComponentEndOverlap.AddDynamic(this, &APortalClass::EndOverlap);
+	capsuleComponent->OnComponentEndOverlap.AddDynamic(this, &APortalClass::EndOverlap);
 #pragma endregion
 
 	if (GetWorld())
@@ -77,7 +82,8 @@ void APortalClass::BeginOverlap(UPrimitiveComponent* OverlappedComponent,
 {
 	if (OtherActor == asPlayerCharacter && canTeleport) 
 	{
-		canTeleport = false;
+		//sets the variable on the corresponding portal 
+		asPortalManager->SetOtherCanTeleport(this, false);
 		asPortalManager->TeleportCharacter(this);
 	}
 }
@@ -85,51 +91,8 @@ void APortalClass::BeginOverlap(UPrimitiveComponent* OverlappedComponent,
 void APortalClass::EndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32
 	OtherBodyIndex)
 {
-	canTeleport = !canTeleport;
+	//allow the portal to teleport again
+	canTeleport = true;
 }
 
 #pragma endregion
-
-
-#pragma region Math
-//converts actor world rotation to relative to another actor
-FVector ConvertLocationToActorSpace(FVector Location, AActor* Reference, AActor* Target)
-{
-	if (Reference == nullptr || Target == nullptr)
-	{
-		return FVector::ZeroVector;
-	}
-
-	FVector Direction = Location - Reference->GetActorLocation();
-	FVector TargetLocation = Target->GetActorLocation();
-
-	FVector Dots;
-	Dots.X = FVector::DotProduct(Direction, Reference->GetActorForwardVector());
-	Dots.Y = FVector::DotProduct(Direction, Reference->GetActorRightVector());
-	Dots.Z = FVector::DotProduct(Direction, Reference->GetActorUpVector());
-
-	FVector NewDirection = Dots.X * Target->GetActorForwardVector()
-		+ Dots.Y * Target->GetActorRightVector()
-		+ Dots.Z * Target->GetActorUpVector();
-
-	return TargetLocation + NewDirection;
-}
-// converts actor world rotation to relative rotation to another actor
-FRotator ConvertRotationToActorSpace(FRotator Rotation, AActor* Reference, AActor* Target)
-{
-	if (Reference == nullptr || Target == nullptr)
-	{
-		return FRotator::ZeroRotator;
-	}
-
-	FTransform SourceTransform = Reference->GetActorTransform();
-	FTransform TargetTransform = Target->GetActorTransform();
-	FQuat QuatRotation = FQuat(Rotation);
-
-	FQuat LocalQuat = SourceTransform.GetRotation().Inverse() * QuatRotation;
-	FQuat NewWorldQuat = TargetTransform.GetRotation() * LocalQuat;
-
-	return NewWorldQuat.Rotator();
-}
-#pragma endregion
-

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "../Public/PortalManager.h"
 #include "../Portal_GE_IICharacter.h"
@@ -43,6 +44,8 @@ protected:
 		UStaticMeshComponent* portalOuterRing;
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (blueprintprotected = true))
 		UStaticMeshComponent* portalInnerRing;
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (blueprintprotected = true))
+		UCapsuleComponent* capsuleComponent;
 
 public:
 	//Scene Capture Component
@@ -92,16 +95,8 @@ public:
 private:
 	bool canTeleport = true;
 
-#pragma endregion
-
-
-#pragma region Math
-private:
-	//converts actor world rotation to relative to another actor
-	FVector ConvertLocationToActorSpace(FVector Location, AActor* Reference, AActor* Target);
-
-	// converts actor world rotation to relative rotation to another actor
-	FRotator ConvertRotationToActorSpace(FRotator Rotation, AActor* Reference, AActor* Target);
+public:
+	void SetCanTeleport(bool payload) { canTeleport = payload; };
 
 #pragma endregion
 

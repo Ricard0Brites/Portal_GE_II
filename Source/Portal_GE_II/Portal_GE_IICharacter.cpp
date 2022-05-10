@@ -24,6 +24,8 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+	RootComponent = GetCapsuleComponent();
+	RootComponent->SetRelativeRotation(FRotator(0,0,0));
 
 	// set our turn rates for input
 	BaseTurnRate = 45.f;

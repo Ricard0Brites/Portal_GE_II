@@ -104,13 +104,22 @@ public:
 
 #pragma region Math
 	float GetVectorLength(FVector payload);
+private:
+	//converts actor world rotation to relative to another actor
+	FVector ConvertLocationToActorSpace(FVector Location, AActor* Reference, AActor* Target);
+
+	// converts actor world rotation to relative rotation to another actor
+	FRotator ConvertRotationToActorSpace(FRotator Rotation, AActor* Reference, AActor* Target);
 #pragma endregion
 
 #pragma region Teleportation
+public:
 	/*
 	* teleports player to the correspondent portal
 	*/
 	void TeleportCharacter(APortalClass* inPortalRef);
+	//sets the others portals ability to spawn
+	void SetOtherCanTeleport(APortalClass* portalRef, bool payload);
 #pragma endregion
 
 };
