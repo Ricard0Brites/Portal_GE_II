@@ -121,47 +121,37 @@ void APortalManager::SetOrangePortalCameraRotation(FRotator payload)
 #pragma region Teleportation
 void APortalManager::TeleportCharacter(APortalClass* inPortalRef)
 {
-	//save player velocity
-	FVector playerVelocity = asPlayerCharacter->GetVelocity();
-
-	//calculates the angle between the portals
-	float angleBetweenPortalsPercent = UKismetMathLibrary::Acos(
-		(FVector::DotProduct(bluePortalRef->GetActorLocation(), orangePortalRef->GetActorLocation())) 
-		/ 
-		(  (GetVectorLength(bluePortalRef->GetActorLocation())) * (GetVectorLength(orangePortalRef->GetActorLocation())))) / 180;
-	
-
-	//blue portal traveling to orange
-	if (inPortalRef->GetPortalType())
+	if (inPortalRef == bluePortalRef)
 	{
-		//set player rotation
-			asPlayerCharacter->GetController()->SetControlRotation(
-				FRotator(0, 
-					ConvertRotationToActorSpace(inPortalRef->GetActorRotation(), inPortalRef, orangePortalRef).Yaw,
-					0));
-			//set player location
-			asPlayerCharacter->SetActorLocation(orangePortalRef->GetActorLocation());
-			//set player velocity
-			asPlayerCharacter->movementComp->Velocity = FVector( 
-				UKismetMathLibrary::Lerp(playerVelocity.X, playerVelocity.Y, UKismetMathLibrary::Clamp(angleBetweenPortalsPercent, 0, 1)), // X
-				UKismetMathLibrary::Lerp(playerVelocity.Y, playerVelocity.X, UKismetMathLibrary::Clamp(angleBetweenPortalsPercent, 0, 1)), // Y
-				playerVelocity.Z);
+		//location
+		asPlayerCharacter->SetActorLocation(orangePortalRef->GetActorLocation());
+
+		//rotation
+
+		FRotator approxOrangePortalRot = UKismetMathLibrary::MakeRotFromXY(orangePortalRef->GetActorForwardVector(), orangePortalRef->GetActorRightVector());
+		approxOrangePortalRot.Pitch = 0; 
+		approxOrangePortalRot.Roll = 0;
+		approxOrangePortalRot.Yaw = UKismetMathLibrary::Round(approxOrangePortalRot.Yaw);
+
+		FRotator playerRot = FRotator(0, asPlayerCharacter->GetActorRotation().Yaw, 0);
+		asPlayerCharacter->GetController()->SetControlRotation((approxOrangePortalRot) + playerRot);
+
+		
 	}
-	//orange portal traveling to blue
 	else
 	{
-		//set player rotation
-		asPlayerCharacter->GetController()->SetControlRotation(
-			FRotator(0,
-				ConvertRotationToActorSpace(inPortalRef->GetActorRotation(), inPortalRef, bluePortalRef).Yaw,
-				0));
-		//set player location
+		//location
 		asPlayerCharacter->SetActorLocation(bluePortalRef->GetActorLocation());
-		//set player velocity
-		asPlayerCharacter->movementComp->Velocity = FVector(
-			UKismetMathLibrary::Lerp(playerVelocity.X, playerVelocity.Y, UKismetMathLibrary::Clamp(angleBetweenPortalsPercent, 0, 1)), // X
-			UKismetMathLibrary::Lerp(playerVelocity.Y, playerVelocity.X, UKismetMathLibrary::Clamp(angleBetweenPortalsPercent, 0, 1)), // Y 
-			playerVelocity.Z);
+
+		//rotation
+
+		FRotator approxbluePortalRot = UKismetMathLibrary::MakeRotFromXY(bluePortalRef->GetActorForwardVector(), bluePortalRef->GetActorRightVector());
+		approxbluePortalRot.Pitch = 0;
+		approxbluePortalRot.Roll = 0;
+		approxbluePortalRot.Yaw = UKismetMathLibrary::Round(approxbluePortalRot.Yaw);
+
+		FRotator playerRot = FRotator(0, asPlayerCharacter->GetActorRotation().Yaw, 0);
+		asPlayerCharacter->GetController()->SetControlRotation((approxbluePortalRot) + playerRot);
 	}
 
 }
@@ -186,46 +176,6 @@ void APortalManager::SetOtherCanTeleport(APortalClass* portalRef, bool payload)
 float APortalManager::GetVectorLength(FVector payload)
 {
 	return UKismetMathLibrary::Sqrt((UKismetMathLibrary::Square(payload.X)) + (UKismetMathLibrary::Square(payload.Y)) + (UKismetMathLibrary::Square(payload.Z)));
-}
-
-//converts actor world rotation to relative to another actor
-FVector APortalManager::ConvertLocationToActorSpace(FVector Location, AActor* Reference, AActor* Target)
-{
-	if (Reference == nullptr || Target == nullptr)
-	{
-		return FVector::ZeroVector;
-	}
-
-	FVector Direction = Location - Reference->GetActorLocation();
-	FVector TargetLocation = Target->GetActorLocation();
-
-	FVector Dots;
-	Dots.X = FVector::DotProduct(Direction, Reference->GetActorForwardVector());
-	Dots.Y = FVector::DotProduct(Direction, Reference->GetActorRightVector());
-	Dots.Z = FVector::DotProduct(Direction, Reference->GetActorUpVector());
-
-	FVector NewDirection = Dots.X * Target->GetActorForwardVector()
-		+ Dots.Y * Target->GetActorRightVector()
-		+ Dots.Z * Target->GetActorUpVector();
-
-	return TargetLocation + NewDirection;
-}
-// converts actor world rotation to relative rotation to another actor
-FRotator APortalManager::ConvertRotationToActorSpace(FRotator Rotation, AActor* Reference, AActor* Target)
-{
-	if (Reference == nullptr || Target == nullptr)
-	{
-		return FRotator::ZeroRotator;
-	}
-
-	FTransform SourceTransform = Reference->GetActorTransform();
-	FTransform TargetTransform = Target->GetActorTransform();
-	FQuat QuatRotation = FQuat(Rotation);
-
-	FQuat LocalQuat = SourceTransform.GetRotation().Inverse() * QuatRotation;
-	FQuat NewWorldQuat = TargetTransform.GetRotation() * LocalQuat;
-
-	return NewWorldQuat.Rotator();
 }
 #pragma endregion
 
