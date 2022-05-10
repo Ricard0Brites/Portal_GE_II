@@ -84,7 +84,6 @@ public:
 		APortalClass* GetOrangePortalRef() { return orangePortalRef; };
 #pragma endregion
 
-
 #pragma region PortalCameraRotation
 private:
 	FRotator bluePortalCameraRotation, orangePortalCameraRotation;
@@ -106,4 +105,12 @@ public:
 #pragma region Math
 	float GetVectorLength(FVector payload);
 #pragma endregion
+
+#pragma region Teleportation
+	/*
+	* teleports player to the correspondent portal
+	*/
+	void TeleportCharacter(APortalClass* inPortalRef);
+#pragma endregion
+
 };

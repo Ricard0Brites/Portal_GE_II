@@ -111,11 +111,48 @@ void APortalManager::SetOrangePortalCameraRotation(FRotator payload)
 }
 #pragma endregion
 
+#pragma region Teleportation
+void APortalManager::TeleportCharacter(APortalClass* inPortalRef)
+{
+	//save player velocity
+	FVector playerVelocity = asPlayerCharacter->GetVelocity();
+	//save player rotation
+	FRotator playerRotation = asPlayerCharacter->GetActorRotation();
+	//calculate and saves the players location relative to the portal
+	FVector playerLocationRelativeToPortal = asPlayerCharacter->GetActorLocation() - inPortalRef->GetActorLocation();
+
+	float portalRotationOffset = (bluePortalRef->GetActorRotation().Yaw - orangePortalRef->GetActorRotation().Yaw);
+	
+
+	//blue portal traveling to orange
+	if (inPortalRef->GetPortalType())
+	{
+		asPlayerCharacter->SetActorLocation(orangePortalRef->GetActorLocation() + 
+			((orangePortalRef->GetActorForwardVector() + orangePortalRef->GetActorRightVector()) *
+				playerLocationRelativeToPortal));
+
+		asPlayerCharacter->SetActorRotation(FRotator(0, playerRotation.Yaw + portalRotationOffset, 0));
+
+	}
+	//orange portal traveling to blue
+	else
+	{
+		asPlayerCharacter->SetActorLocation(bluePortalRef->GetActorLocation());
+		asPlayerCharacter->AddActorWorldOffset(playerLocationRelativeToPortal);
+
+		asPlayerCharacter->SetActorRotation(FRotator(0, playerLocationRelativeToPortal.Z, 0));
+	}
+
+}
+#pragma endregion
+
+
 #pragma region Math
 float APortalManager::GetVectorLength(FVector payload)
 {
 	return UKismetMathLibrary::Sqrt((UKismetMathLibrary::Square(payload.X)) + (UKismetMathLibrary::Square(payload.Y)) + (UKismetMathLibrary::Square(payload.Z)));
 }
+
 #pragma endregion
 
 

@@ -61,6 +61,7 @@ private:
 		bool myPortalType;
 public:
 	void SetPortalType(bool type) { myPortalType = type; };
+	bool GetPortalType() { return myPortalType; };
 private:
 
 	//this variable sets the portal color
@@ -73,6 +74,35 @@ public:
 		FLinearColor GetPortalColor() { return portalColor; };
 
 	void SetPortalColor(FLinearColor color) { portalColor = color; };
+#pragma endregion
+
+#pragma region Teleportation
+	
+	UFUNCTION()
+		void BeginOverlap(UPrimitiveComponent* OverlappedComponent,
+			AActor* OtherActor,
+			UPrimitiveComponent* OtherComp,
+			int32 OtherBodyIndex,
+			bool bFromSweep,
+			const FHitResult& SweepResult);
+	UFUNCTION()
+		void EndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32
+			OtherBodyIndex);
+
+private:
+	bool canTeleport = true;
+
+#pragma endregion
+
+
+#pragma region Math
+private:
+	//converts actor world rotation to relative to another actor
+	FVector ConvertLocationToActorSpace(FVector Location, AActor* Reference, AActor* Target);
+
+	// converts actor world rotation to relative rotation to another actor
+	FRotator ConvertRotationToActorSpace(FRotator Rotation, AActor* Reference, AActor* Target);
+
 #pragma endregion
 
 };
