@@ -3,6 +3,7 @@
 
 #include "PortalManager.h"
 #include "EngineMinimal.h"
+#include "Math/Rotator.h"
 #include "GameFramework/MovementComponent.h"
 
 
@@ -121,22 +122,31 @@ void APortalManager::SetOrangePortalCameraRotation(FRotator payload)
 #pragma region Teleportation
 void APortalManager::TeleportCharacter(APortalClass* inPortalRef)
 {
+	FVector velocity = asPlayerCharacter->GetVelocity();
 	if (inPortalRef == bluePortalRef)
 	{
 		//location
 		asPlayerCharacter->SetActorLocation(orangePortalRef->GetActorLocation());
 
 		//rotation
-
 		FRotator approxOrangePortalRot = UKismetMathLibrary::MakeRotFromXY(orangePortalRef->GetActorForwardVector(), orangePortalRef->GetActorRightVector());
 		approxOrangePortalRot.Pitch = 0; 
 		approxOrangePortalRot.Roll = 0;
 		approxOrangePortalRot.Yaw = UKismetMathLibrary::Round(approxOrangePortalRot.Yaw);
-
 		FRotator playerRot = FRotator(0, asPlayerCharacter->GetActorRotation().Yaw, 0);
+
+		UKismetMathLibrary::Abs(orangePortalRef->GetActorForwardVector().X) == 1 ? approxOrangePortalRot *= 4 * orangePortalRef->GetActorForwardVector().X : approxOrangePortalRot *= 4 * orangePortalRef->GetActorForwardVector().Y;
+
+		if (UKismetMathLibrary::Abs(approxOrangePortalRot.Yaw) != 90)
+		{
+			approxOrangePortalRot.Yaw *= UKismetMathLibrary::Sin(30 - approxOrangePortalRot.Yaw);
+			asPlayerCharacter->movementComp->StopMovementImmediately();
+		}
 		asPlayerCharacter->GetController()->SetControlRotation((approxOrangePortalRot) + playerRot);
 
-		
+		//Velocity
+
+		asPlayerCharacter->movementComp->Velocity = (asPlayerCharacter->GetActorForwardVector() * velocity ) * orangePortalRef->GetActorForwardVector();
 	}
 	else
 	{
@@ -144,14 +154,24 @@ void APortalManager::TeleportCharacter(APortalClass* inPortalRef)
 		asPlayerCharacter->SetActorLocation(bluePortalRef->GetActorLocation());
 
 		//rotation
-
-		FRotator approxbluePortalRot = UKismetMathLibrary::MakeRotFromXY(bluePortalRef->GetActorForwardVector(), bluePortalRef->GetActorRightVector());
-		approxbluePortalRot.Pitch = 0;
-		approxbluePortalRot.Roll = 0;
-		approxbluePortalRot.Yaw = UKismetMathLibrary::Round(approxbluePortalRot.Yaw);
-
+		FRotator approxBluePortalRot = UKismetMathLibrary::MakeRotFromXY(bluePortalRef->GetActorForwardVector(), bluePortalRef->GetActorRightVector());
+		approxBluePortalRot.Pitch = 0;
+		approxBluePortalRot.Roll = 0;
+		approxBluePortalRot.Yaw = UKismetMathLibrary::Round(approxBluePortalRot.Yaw);
 		FRotator playerRot = FRotator(0, asPlayerCharacter->GetActorRotation().Yaw, 0);
-		asPlayerCharacter->GetController()->SetControlRotation((approxbluePortalRot) + playerRot);
+
+		UKismetMathLibrary::Abs(bluePortalRef->GetActorForwardVector().X) == 1 ? approxBluePortalRot *= 4 * bluePortalRef->GetActorForwardVector().X : approxBluePortalRot *= 4 * bluePortalRef->GetActorForwardVector().Y;
+
+		if (UKismetMathLibrary::Abs(approxBluePortalRot.Yaw) != 90)
+		{
+			approxBluePortalRot.Yaw *= UKismetMathLibrary::Sin(30 - approxBluePortalRot.Yaw);
+			asPlayerCharacter->movementComp->StopMovementImmediately();
+		}
+		asPlayerCharacter->GetController()->SetControlRotation((approxBluePortalRot)+playerRot);
+
+
+		//velocity
+		asPlayerCharacter->movementComp->Velocity =(asPlayerCharacter->GetActorForwardVector() * velocity) * bluePortalRef->GetActorForwardVector();
 	}
 
 }
