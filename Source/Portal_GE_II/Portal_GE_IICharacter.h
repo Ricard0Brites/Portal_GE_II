@@ -5,7 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
-#include <string>
+#include "Kismet/KismetMathLibrary.h"
+#include "Math/UnrealMathUtility.h"
+#include "GameFramework/MovementComponent.h"
 #include "Portal_GE_IICharacter.generated.h"
 
 class UInputComponent;
@@ -21,8 +23,9 @@ class APortal_GE_IICharacter : public ACharacter
 {
 	GENERATED_BODY()
 
-	/** Pawn mesh: 1st person view (arms; seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category=Mesh, meta	= (allowprivateaccess = true))
+#pragma region Components
+		/** Pawn mesh: 1st person view (arms; seen only by self) */
+		UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = Mesh, meta = (allowprivateaccess = true))
 		USkeletalMeshComponent* Mesh1P;
 
 	/** Pawn mesh: 3rd person view (full mesh ) */
@@ -30,7 +33,7 @@ class APortal_GE_IICharacter : public ACharacter
 		USkeletalMeshComponent* Mesh3P;
 
 	/** Gun mesh: 1st person view (seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta	= ( allowprivateaccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (allowprivateaccess = true))
 		USkeletalMeshComponent* FP_Gun;
 
 	/** Gun mesh: 3st person view (seen only by self) */
@@ -38,59 +41,67 @@ class APortal_GE_IICharacter : public ACharacter
 		USkeletalMeshComponent* FP_Gun3P;
 
 	/** Location on gun mesh where projectiles should spawn. */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta	= (allowprivateaccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (allowprivateaccess = true))
 		USceneComponent* FP_MuzzleLocation;
 
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		UCameraComponent* FirstPersonCameraComponent;
+#pragma endregion
+
 
 public:
 	APortal_GE_IICharacter();
 
 protected:
 	virtual void BeginPlay();
+	virtual void Tick(float DeltaTime);
+
 public:
+#pragma region Default
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
-	float BaseTurnRate;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+		float BaseTurnRate;
 
 	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
-	float BaseLookUpRate;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+		float BaseLookUpRate;
 
 	/** Gun muzzle's offset from the characters location */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
-	FVector GunOffset;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		FVector GunOffset;
 
 	/** Projectile class to spawn */
-	UPROPERTY(EditDefaultsOnly, Category=Projectile)
-	TSubclassOf<class APortal_GE_IIProjectile> ProjectileClass;
+	UPROPERTY(EditDefaultsOnly, Category = Projectile)
+		TSubclassOf<class APortal_GE_IIProjectile> ProjectileClass;
 
 	/** Sound to play each time we fire */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
-	USoundBase* FireSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		USoundBase* FireSound;
 
 	/** AnimMontage to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	UAnimMontage* FireAnimation;
+		UAnimMontage* FireAnimation;
 
-	/** Whether to use motion controller location for aiming. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	uint8 bUsingMotionControllers : 1;
+#pragma endregion
 
 protected:
 	
-	/** Fires a projectile. */
-	void OnFire();
+#pragma region Inputs
+	// APawn interface
+	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
+	// End of APawn interface
 
-	/** Resets HMD orientation and position in VR. */
-	void OnResetVR();
+	/** Fires a projectile or a portal */
+	void OnFireLeft();
+	/** Fires a projectile or a portal */
+	void OnFireRight();
+
 
 	/** Handles moving forward/backward */
 	void MoveForward(float Val);
 
-	/** Handles stafing movement, left and right */
+	/** Handles strafing movement, left and right */
 	void MoveRight(float Val);
 
 	/**
@@ -104,48 +115,57 @@ protected:
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
 	void LookUpAtRate(float Rate);
-
-	struct TouchData
-	{
-		TouchData() { bIsPressed = false;Location=FVector::ZeroVector;}
-		bool bIsPressed;
-		ETouchIndex::Type FingerIndex;
-		FVector Location;
-		bool bMoved;
-	};
-	void BeginTouch(const ETouchIndex::Type FingerIndex, const FVector Location);
-	void EndTouch(const ETouchIndex::Type FingerIndex, const FVector Location);
-	void TouchUpdate(const ETouchIndex::Type FingerIndex, const FVector Location);
-	TouchData	TouchItem;
-	
-protected:
-	// APawn interface
-	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
-	// End of APawn interface
-
-	/* 
-	 * Configures input for touchscreen devices if there is a valid touch interface for doing so 
-	 *
-	 * @param	InputComponent	The input component pointer to bind controls to
-	 * @returns true if touch controls were enabled.
-	 */
-	bool EnableTouchscreenMovement(UInputComponent* InputComponent);
+#pragma endregion
 
 public:
+#pragma region DefaultFunctions
 	/** Returns Mesh1P subobject **/
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+#pragma endregion
+
 
 private:
+	
+#pragma region PortalCrosshairCheck
 
-/** checks if the player can spawn a portal 
-	@param fLinecastLength is the length the linecast should be 
-	@param sTag is the tag that the cast is searching for to return true
-	@param fPortalWidth is the portals' full width
-*/
-	UFUNCTION(BlueprintCallable, Category = "Portal")
-		bool CanPortalSpawn(float fLinecastLength,	FName sTag, float fPortalWidth, float fPortalHeight);
+	/** 
+	*	checks if the player can spawn a portal
+	* 
+	*	@param fLinecastLength is the length the line cast should be
+	*	@param sTag is the tag that the cast is searching for to return true
+	*	@param fPortalWidth is the portals' full width
+	* 
+	*/
+	bool CanPortalSpawn(float fLinecastLength, FName sTag, float fPortalWidth, float fPortalHeight);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Portal", meta = (allowprivateaccess = true))
+		float lineCastLength;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Portal", meta = (allowprivateaccess = true))
+		float portalWidth;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Portal", meta = (allowprivateaccess = true))
+		float portalHeight;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Portal", meta = (allowprivateaccess = true))
+		FName climbableTag;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Portal", meta = (allowprivateaccess = true))
+		bool bCanPortalSpawn;
+#pragma endregion
+
+#pragma region PortalSpawnRotation
+public:
+	FRotator portalSpawnRotation;
+#pragma endregion
+
+public:
+
+	UPROPERTY(BlueprintReadWrite)
+	UMovementComponent* movementComp;
 
 };
+
 

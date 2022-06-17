@@ -1,8 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Portal_GE_IIProjectile.h"
-#include "GameFramework/ProjectileMovementComponent.h"
-#include "Components/SphereComponent.h"
+
 
 APortal_GE_IIProjectile::APortal_GE_IIProjectile() 
 {
@@ -31,11 +30,22 @@ APortal_GE_IIProjectile::APortal_GE_IIProjectile()
 	InitialLifeSpan = 3.0f;
 }
 
+void APortal_GE_IIProjectile::BeginPlay()
+{
+	Super::BeginPlay();
+	asPortalManager = Cast<APortalManager>(UGameplayStatics::GetActorOfClass(this, portalManagerBpRef));
+}
+
 void APortal_GE_IIProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	// Only add impulse and destroy projectile if we hit a physics
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
 	{
+		if (Hit.GetActor()->ActorHasTag("Wall") && bCanPortalSpawn)
+		{
+			asPortalManager->SpawnPortal(bPortalTypeToSpawn, Hit.Location);
+			bCanPortalSpawn = false;
+		}
 		Destroy();
 	}
 }
