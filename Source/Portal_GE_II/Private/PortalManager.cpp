@@ -94,12 +94,12 @@ FRotator APortalManager::CalculateAngleBetweenCharacterAndPortal(APortalClass* p
 {
 	// vector u = character location - portal location 
 	// formula: u = b - a
-	FVector u = asPlayerCharacter->GetActorLocation() - GetActorLocation();
+	FVector u = asPlayerCharacter->GetActorLocation() - portalReference->GetActorLocation();
 	// v = portal right vector
 	FVector v = portalReference->GetActorRightVector();
 
 	// uses a worked version of the formula u.v = |u|.|v| X cos(u ^ v)
-	return FRotator(0, 0, UKismetMathLibrary::Acos((FVector::DotProduct(u, v)) / (GetVectorLength(u) * GetVectorLength(v))));
+	return FRotator(0, UKismetMathLibrary::Acos((FVector::DotProduct(u, v)) / (GetVectorLength(u) * GetVectorLength(v))), 0);
 }
 
 void APortalManager::SetBluePortalCameraRotation(FRotator payload)
@@ -142,11 +142,10 @@ void APortalManager::TeleportCharacter(APortalClass* inPortalRef)
 			approxOrangePortalRot.Yaw *= UKismetMathLibrary::Sin(30 - approxOrangePortalRot.Yaw);
 			asPlayerCharacter->movementComp->StopMovementImmediately();
 		}
-		asPlayerCharacter->GetController()->SetControlRotation((approxOrangePortalRot) + playerRot);
+		asPlayerCharacter->GetController()->SetControlRotation( FRotator(0, 180, 0) + orangePortalRef->GetActorRotation() - (bluePortalRef->GetActorRotation() - asPlayerCharacter->GetControlRotation()));
 
 		//Velocity
-
-		asPlayerCharacter->movementComp->Velocity = (asPlayerCharacter->GetActorForwardVector() * velocity ) * orangePortalRef->GetActorForwardVector();
+		asPlayerCharacter->movementComp->Velocity = (-1 * velocity) * orangePortalRef->sceneCapture->GetForwardVector();
 	}
 	else
 	{
@@ -160,18 +159,19 @@ void APortalManager::TeleportCharacter(APortalClass* inPortalRef)
 		approxBluePortalRot.Yaw = UKismetMathLibrary::Round(approxBluePortalRot.Yaw);
 		FRotator playerRot = FRotator(0, asPlayerCharacter->GetActorRotation().Yaw, 0);
 
-		UKismetMathLibrary::Abs(bluePortalRef->GetActorForwardVector().X) == 1 ? approxBluePortalRot *= 4 * bluePortalRef->GetActorForwardVector().X : approxBluePortalRot *= 4 * bluePortalRef->GetActorForwardVector().Y;
+		UKismetMathLibrary::Abs(bluePortalRef->GetActorForwardVector().X) == 1 ? 
+			approxBluePortalRot *= 4 * bluePortalRef->GetActorForwardVector().X : 
+			approxBluePortalRot *= 4 * bluePortalRef->GetActorForwardVector().Y;
 
 		if (UKismetMathLibrary::Abs(approxBluePortalRot.Yaw) != 90)
 		{
 			approxBluePortalRot.Yaw *= UKismetMathLibrary::Sin(30 - approxBluePortalRot.Yaw);
 			asPlayerCharacter->movementComp->StopMovementImmediately();
 		}
-		asPlayerCharacter->GetController()->SetControlRotation((approxBluePortalRot)+playerRot);
-
+		asPlayerCharacter->GetController()->SetControlRotation( FRotator(0, 180, 0) + bluePortalRef->GetActorRotation() - (orangePortalRef->GetActorRotation() - asPlayerCharacter->GetControlRotation()));
 
 		//velocity
-		asPlayerCharacter->movementComp->Velocity =(asPlayerCharacter->GetActorForwardVector() * velocity) * bluePortalRef->GetActorForwardVector();
+		asPlayerCharacter->movementComp->Velocity = (-1 * velocity) * bluePortalRef->sceneCapture->GetForwardVector();
 	}
 
 }

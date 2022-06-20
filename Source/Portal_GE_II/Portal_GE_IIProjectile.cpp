@@ -33,6 +33,8 @@ APortal_GE_IIProjectile::APortal_GE_IIProjectile()
 void APortal_GE_IIProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+	SetOwner(gameStateRef);
+	asGameState = Cast<APortalGameState>(gameStateRef);
 	asPortalManager = Cast<APortalManager>(UGameplayStatics::GetActorOfClass(this, portalManagerBpRef));
 }
 
@@ -43,9 +45,19 @@ void APortal_GE_IIProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherA
 	{
 		if (Hit.GetActor()->ActorHasTag("Wall") && bCanPortalSpawn)
 		{
-			asPortalManager->SpawnPortal(bPortalTypeToSpawn, Hit.Location);
+			//call a  run-on-server function that calls a multi cast that spawns the portal in every client
+			SR_SpawnPortals(Hit.Location, bPortalTypeToSpawn);
+			
 			bCanPortalSpawn = false;
 		}
 		Destroy();
+	}
+}
+
+void APortal_GE_IIProjectile::SR_SpawnPortals_Implementation(FVector location, bool portalType)
+{
+	if (HasAuthority())
+	{
+		asGameState->SpawnPortalOnAllClients(location, portalType, asPortalManager);
 	}
 }
