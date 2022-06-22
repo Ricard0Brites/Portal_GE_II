@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
 #include "PortalManager.h"
+#include "PortalGameState.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 #include "Portal_GE_IIProjectile.generated.h"
@@ -13,6 +14,7 @@
 class USphereComponent;
 class UProjectileMovementComponent;
 class APortalManager;
+class APortalGameState;
 
 UCLASS(config=Game)
 class APortal_GE_IIProjectile : public AActor
@@ -35,6 +37,12 @@ public:
 		TSubclassOf<APortalManager> portalManagerBpRef;
 	// the reference to the actual portal BP
 	APortalManager* asPortalManager;
+
+	//reference to the game state class
+	UPROPERTY(BlueprintReadWrite, Category = "References", meta = (AllowPrivateAccess = true))
+		AActor* gameStateRef;
+
+	APortalGameState* asGameState;
 #pragma endregion
 
 protected:
@@ -59,12 +67,17 @@ protected:
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 #pragma endregion
 
-
 #pragma region PortalParameters
 public:
 	// Saves which type of portal should spawn
 	bool bPortalTypeToSpawn;
 	bool bCanPortalSpawn = false;
+#pragma endregion
+
+#pragma region Multiplayer
+private:
+	UFUNCTION( Server, Unreliable, BlueprintCallable )
+		void SR_SpawnPortals(FVector location, bool portalType);
 #pragma endregion
 
 

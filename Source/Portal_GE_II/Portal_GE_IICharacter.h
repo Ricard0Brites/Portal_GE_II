@@ -25,7 +25,7 @@ class APortal_GE_IICharacter : public ACharacter
 
 #pragma region Components
 		/** Pawn mesh: 1st person view (arms; seen only by self) */
-		UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = Mesh, meta = (allowprivateaccess = true))
+		UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USkeletalMeshComponent* Mesh1P;
 
 	/** Pawn mesh: 3rd person view (full mesh ) */
@@ -33,15 +33,15 @@ class APortal_GE_IICharacter : public ACharacter
 		USkeletalMeshComponent* Mesh3P;
 
 	/** Gun mesh: 1st person view (seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (allowprivateaccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USkeletalMeshComponent* FP_Gun;
 
 	/** Gun mesh: 3st person view (seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (allowprivateaccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USkeletalMeshComponent* FP_Gun3P;
 
 	/** Location on gun mesh where projectiles should spawn. */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (allowprivateaccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USceneComponent* FP_MuzzleLocation;
 
 	/** First person camera */
@@ -140,19 +140,19 @@ private:
 	*/
 	bool CanPortalSpawn(float fLinecastLength, FName sTag, float fPortalWidth, float fPortalHeight);
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Portal", meta = (allowprivateaccess = true))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Portal", meta = (AllowPrivateAccess = true))
 		float lineCastLength;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Portal", meta = (allowprivateaccess = true))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Portal", meta = (AllowPrivateAccess = true))
 		float portalWidth;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Portal", meta = (allowprivateaccess = true))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Portal", meta = (AllowPrivateAccess = true))
 		float portalHeight;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Portal", meta = (allowprivateaccess = true))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Portal", meta = (AllowPrivateAccess = true))
 		FName climbableTag;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Portal", meta = (allowprivateaccess = true))
+	UPROPERTY(BlueprintReadOnly, Category = "Portal", meta = (AllowPrivateAccess = true))
 		bool bCanPortalSpawn;
 #pragma endregion
 

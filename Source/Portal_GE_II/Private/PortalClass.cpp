@@ -73,12 +73,7 @@ void APortalClass::Tick(float deltaTime)
 }
 
 #pragma region Teleportation
-void APortalClass::BeginOverlap(UPrimitiveComponent* OverlappedComponent,
-	AActor* OtherActor,
-	UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex,
-	bool bFromSweep,
-	const FHitResult& SweepResult)
+void APortalClass::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,const FHitResult& SweepResult)
 {
 	if (OtherActor == asPlayerCharacter && canTeleport) 
 	{
@@ -88,8 +83,7 @@ void APortalClass::BeginOverlap(UPrimitiveComponent* OverlappedComponent,
 	}
 }
 
-void APortalClass::EndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32
-	OtherBodyIndex)
+void APortalClass::EndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	//allow the portal to teleport again
 	canTeleport = true;

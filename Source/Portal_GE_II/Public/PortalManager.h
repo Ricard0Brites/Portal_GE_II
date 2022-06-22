@@ -28,7 +28,6 @@ protected:
 	APortal_GE_IICharacter* asPlayerCharacter;
 #pragma endregion
 
-
 #pragma region PortalSpawning
 
 	//portal blueprint reference (to spawn later on)
