@@ -33,7 +33,7 @@ protected:
 public:
 #pragma region CastingReferences
 	//the reference to the Subclass
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Portal", meta = (allowprivateaccess = true))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Portal", meta = (AllowPrivateAccess = true))
 		TSubclassOf<APortalManager> portalManagerBpRef;
 	// the reference to the actual portal BP
 	APortalManager* asPortalManager;
