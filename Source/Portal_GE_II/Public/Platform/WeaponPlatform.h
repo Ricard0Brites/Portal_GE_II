@@ -4,6 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+
+#include "Components/StaticMeshComponent.h"
+
+
 #include "WeaponPlatform.generated.h"
 
 UCLASS()
@@ -23,4 +27,11 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+private:
+	UPROPERTY( EditDefaultsOnly, BlueprintReadWrite, Category = "Mesh",meta = ( AllowPrivateAccess = true ))
+		UStaticMeshComponent* platformMesh;
+	UPROPERTY( EditDefaultsOnly, BlueprintReadWrite, Category = "Mesh", meta = ( AllowPrivateAccess = true ))
+		UStaticMeshComponent* weaponMesh;
+	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Visuals", meta	= ( AllowPrivateAccess = true ))
+		float fWeaponRotationSpeed;
 };

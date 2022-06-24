@@ -156,11 +156,6 @@ private:
 		bool bCanPortalSpawn;
 #pragma endregion
 
-#pragma region PortalSpawnRotation
-public:
-	FRotator portalSpawnRotation;
-#pragma endregion
-
 public:
 
 	UPROPERTY(BlueprintReadWrite)

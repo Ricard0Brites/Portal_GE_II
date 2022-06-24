@@ -26,7 +26,7 @@ void APortalManager::BeginPlay()
 }
 
 #pragma region PortalSpawn
-void APortalManager::SpawnPortal(bool bPortalType, FVector Location)
+void APortalManager::SpawnPortal(bool bPortalType, FVector Location, FHitResult hit)
 {
 	if (GetWorld())
 	{
@@ -45,7 +45,7 @@ void APortalManager::SpawnPortal(bool bPortalType, FVector Location)
 			}
 
 			//spawns the portal
-			bluePortalRef = GetWorld()->SpawnActor<APortalClass>(portalBPRef, Location, GetPortalSpawnRotation());
+			bluePortalRef = GetWorld()->SpawnActor<APortalClass>(portalBPRef, Location, UKismetMathLibrary::MakeRotFromX(hit.Normal));
 			//assigns the blue color
 			bluePortalRef->SetPortalColor(FLinearColor(.0f, 0.35f, 1.f, 1.f));
 			//assigns the portal its type
@@ -71,7 +71,7 @@ void APortalManager::SpawnPortal(bool bPortalType, FVector Location)
 			}
 
 			//spawns the portal
-			orangePortalRef = GetWorld()->SpawnActor<APortalClass>(portalBPRef, Location, GetPortalSpawnRotation());
+			orangePortalRef = GetWorld()->SpawnActor<APortalClass>(portalBPRef, Location, UKismetMathLibrary::MakeRotFromX(hit.Normal));
 			//assigns the orange color
 			orangePortalRef->SetPortalColor(FLinearColor(1.f, 0.35f, .0f, 1.f));
 			//assigns the portal its type
@@ -81,11 +81,6 @@ void APortalManager::SpawnPortal(bool bPortalType, FVector Location)
 			isOrangePortalActive = true;
 		}
 	}
-}
-
-FRotator APortalManager::GetPortalSpawnRotation()
-{
-	return asPlayerCharacter->portalSpawnRotation;
 }
 #pragma endregion
 

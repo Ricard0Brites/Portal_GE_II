@@ -44,12 +44,7 @@ public:
 	* PortalType = True ----> Blue portal
 	* PortalType = False ---> Orange Portal
 	*/
-	void SpawnPortal(bool bPortalType, FVector Location);
-
-	/*
-	* Portal Rotation Getter
-	*/
-	FRotator GetPortalSpawnRotation();
+	void SpawnPortal(bool bPortalType, FVector Location, FHitResult hit);
 #pragma endregion
 
 private:

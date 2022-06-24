@@ -89,6 +89,8 @@ void APortal_GE_IICharacter::BeginPlay()
 
 	// Show or hide the two versions of the gun based on whether or not we're using motion controllers.
 	Mesh1P->SetHiddenInGame(false, true);
+
+
 }
 
 void APortal_GE_IICharacter::Tick(float DeltaTime)
@@ -256,9 +258,6 @@ bool APortal_GE_IICharacter::CanPortalSpawn(float fLinecastLength, FName sTag, f
 		{
 			if (result.GetActor()->ActorHasTag(sTag) == true)
 			{
-				//set portal spawn Rotation
-				portalSpawnRotation = UKismetMathLibrary::MakeRotFromX(result.Normal);
-
 
 				FHitResult hitResult;
 				//changes the X for the Y to create a new normal vector orthogonal to the wall

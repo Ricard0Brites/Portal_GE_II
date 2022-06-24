@@ -77,7 +77,7 @@ public:
 #pragma region Multiplayer
 private:
 	UFUNCTION( Server, Unreliable, BlueprintCallable )
-		void SR_SpawnPortals(FVector location, bool portalType);
+		void SR_SpawnPortals(FVector location, bool portalType, FHitResult hitResult);
 #pragma endregion
 
 
