@@ -14,7 +14,7 @@ AWeaponPlatform::AWeaponPlatform()
 
 	weaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon Mesh"));
 	weaponMesh->SetupAttachment(RootComponent);
-	weaponMesh->SetRelativeLocation(FVector(0,0,50));
+	weaponMesh->SetRelativeLocation(FVector(0,0,100));
 }
 
 // Called when the game starts or when spawned
