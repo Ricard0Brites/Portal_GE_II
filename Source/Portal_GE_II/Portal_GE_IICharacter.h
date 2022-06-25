@@ -24,6 +24,7 @@ class APortal_GE_IICharacter : public ACharacter
 	GENERATED_BODY()
 
 #pragma region Components
+private:
 		/** Pawn mesh: 1st person view (arms; seen only by self) */
 		UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USkeletalMeshComponent* Mesh1P;
@@ -32,10 +33,15 @@ class APortal_GE_IICharacter : public ACharacter
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly,Category = Mesh, meta = (AllowPrivateAccess = true))
 		USkeletalMeshComponent* Mesh3P;
 
+public:
 	/** Gun mesh: 1st person view (seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USkeletalMeshComponent* FP_Gun;
 
+	USkeletalMeshComponent* GetMesh1P() { return Mesh1P; }
+	USceneComponent* GetRootComponent() { return RootComponent; }
+
+private:
 	/** Gun mesh: 3st person view (seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USkeletalMeshComponent* FP_Gun3P;
@@ -47,6 +53,7 @@ class APortal_GE_IICharacter : public ACharacter
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		UCameraComponent* FirstPersonCameraComponent;
+	
 #pragma endregion
 
 
@@ -115,6 +122,8 @@ protected:
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
 	void LookUpAtRate(float Rate);
+
+	bool bCanShoot;
 #pragma endregion
 
 public:
@@ -124,7 +133,6 @@ public:
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 #pragma endregion
-
 
 private:
 	
@@ -156,7 +164,17 @@ private:
 		bool bCanPortalSpawn;
 #pragma endregion
 
+#pragma region WeaponType
+	int16 myWeaponType;
 public:
+	void SetWeaponType(int16 payload) { myWeaponType = payload; }
+
+#pragma endregion
+
+
+public:
+
+	void SetCanShoot(bool payload) { bCanShoot = payload; }
 
 	UPROPERTY(BlueprintReadWrite)
 	UMovementComponent* movementComp;

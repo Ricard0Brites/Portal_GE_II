@@ -79,7 +79,5 @@ private:
 	UFUNCTION( Server, Unreliable, BlueprintCallable )
 		void SR_SpawnPortals(FVector location, bool portalType, FHitResult hitResult);
 #pragma endregion
-
-
 };
 

@@ -53,13 +53,13 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 	Mesh3P->SetRelativeLocation(FVector(0,0,-90));
 	Mesh3P->SetRelativeRotation(FRotator(0,-90,0));
 
-	// Create a gun mesh component
-	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
-	FP_Gun->SetOnlyOwnerSee(true);			// otherwise won't be visible in the multiplayer
-	FP_Gun->bCastDynamicShadow = false;
-	FP_Gun->CastShadow = false;
-	// FP_Gun->SetupAttachment(Mesh1P, TEXT("GripPoint"));
-	FP_Gun->SetupAttachment(RootComponent);
+	//// Create a gun mesh component
+	//FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
+	//FP_Gun->SetOnlyOwnerSee(true);			// otherwise won't be visible in the multiplayer
+	//FP_Gun->bCastDynamicShadow = false;
+	//FP_Gun->CastShadow = false;
+	//// FP_Gun->SetupAttachment(Mesh1P, TEXT("GripPoint"));
+	//FP_Gun->SetupAttachment(RootComponent);
 
 	// Create a gun mesh component
 	FP_Gun3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun3Person"));
@@ -71,9 +71,9 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 	FP_Gun3P->SetRelativeRotation(FRotator(	0, 100, 0));
 
 
-	FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
+	/*FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
 	FP_MuzzleLocation->SetupAttachment(FP_Gun);
-	FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));
+	FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));*/
 
 	// Default offset from the character location for projectiles to spawn
 	GunOffset = FVector(100.0f, 0.0f, 10.0f);
@@ -84,8 +84,12 @@ void APortal_GE_IICharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
+	bCanShoot = false;
+
+	//request a gun from the server
+
 	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
-	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+	//FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
 
 	// Show or hide the two versions of the gun based on whether or not we're using motion controllers.
 	Mesh1P->SetHiddenInGame(false, true);
@@ -131,7 +135,7 @@ void APortal_GE_IICharacter::SetupPlayerInputComponent(class UInputComponent* Pl
 void APortal_GE_IICharacter::OnFireLeft()
 {
 	// try and fire a projectile
-	if (ProjectileClass != nullptr)
+	if (ProjectileClass != nullptr && bCanShoot)
 	{
 		UWorld* const World = GetWorld();
 		if (World != nullptr)
@@ -247,7 +251,7 @@ bool APortal_GE_IICharacter::CanPortalSpawn(float fLinecastLength, FName sTag, f
 	if (GetWorld())
 	{
 		FVector LineCastEndLocation = GetControlRotation().Vector();
-		FVector LineCastStartLocation = FP_Gun->GetComponentLocation();
+		FVector LineCastStartLocation = FVector(0,0,0); //FP_Gun->GetComponentLocation();
 
 		// Line Trace to determine if the object the player is looking at is a wall that accepts portals
 		FHitResult result;
