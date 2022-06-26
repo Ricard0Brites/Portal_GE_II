@@ -3,26 +3,18 @@
 
 #include "PortalGameMode.h"
 
-class UGameplayStatics;
 
-void APortalGameMode::SR_SpawnWeaponInPlayer(TSubclassOf<APortal_GE_IICharacter> characterRef,int32 weaponType)
-{
-	////// Create a gun mesh component
-	//characterRef->FP_Gun = characterRef.CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
-	//asCharacter.FP_Gun->SetOnlyOwnerSee(true);			// otherwise won't be visible in the multiplayer
-	//asCharacter.FP_Gun->bCastDynamicShadow = false;
-	//asCharacter.FP_Gun->CastShadow = false;
-	//asCharacter.FP_Gun->SetupAttachment(asCharacter.GetMesh1P(), TEXT("GripPoint"));
-	//asCharacter.FP_Gun->SetupAttachment(asCharacter.GetRootComponent());
 
-	////allows the character to shoot again
-	//asCharacter.SetCanShoot(true);
+void APortalGameMode::SR_SpawnWeaponInPlayer_Implementation(APortal_GE_IICharacter* charRef, int32 weaponTypePayload)
+{	
+	//allows the character to shoot again
+	(*charRef).SetCanShoot(true);
 
-	////pass the weapon type to the gun
-	//asCharacter.SetWeaponType(weaponType);
+	//pass the weapon type to the gun
+	(*charRef).SetWeaponType(weaponTypePayload);
 
-	////trigger a color change in the 3p gun mesh
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Some debug message!"));
+	//trigger a color change in the 3p gun mesh
+	
 }
 
 FLinearColor APortalGameMode::GetWeaponColor(int32 weaponType)

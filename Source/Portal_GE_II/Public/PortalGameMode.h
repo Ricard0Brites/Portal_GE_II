@@ -7,10 +7,12 @@
 
 #include "../Portal_GE_IICharacter.h"
 #include "././Kismet/GameplayStatics.h"
+#include "././Kismet/KismetSystemLibrary.h"
 
 #include "PortalGameMode.generated.h"
 
 class APortal_GE_IICharacter;
+class UGameplayStatics;
 /**
  * 
  */
@@ -30,7 +32,6 @@ private:
 		UPROPERTY(EditDefaultsOnly, category = "Weapon Properties", meta = (AllowPrivateAccess = true))
 			TArray<int32> iWeaponAmmo;
 
-
 		
 public:
 	/*
@@ -40,9 +41,8 @@ public:
 	*	2-> Rocket Launcher
 	*	3-> Portal Gun
 	*/
-	UFUNCTION( BlueprintCallable )
-	void SR_SpawnWeaponInPlayer(TSubclassOf<APortal_GE_IICharacter> characterRef, int32 weaponType);
+	UFUNCTION( Server, Reliable )
+	void SR_SpawnWeaponInPlayer(APortal_GE_IICharacter* charRef, int32 weaponTypePayload);
 	
 	FLinearColor GetWeaponColor(int32 weaponType);
-
 };

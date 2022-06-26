@@ -26,7 +26,7 @@ AWeaponPlatform::AWeaponPlatform()
 }
 
 // Called when the game starts or when spawned
-void AWeaponPlatform::BeginPlay()
+void AWeaponPlatform::BeginPlay() 
 {
 	Super::BeginPlay();
 	boxCollider->OnComponentBeginOverlap.AddDynamic(this, &AWeaponPlatform::OnBoxBeginOverlap);
@@ -51,7 +51,8 @@ void AWeaponPlatform::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComp, AAc
 {
 	if (OtherActor->ActorHasTag("Character"))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 20, FColor::Red, TEXT("Debug message weapon platform."));
+		APortal_GE_IICharacter* asCharacter = Cast<APortal_GE_IICharacter>(OtherActor);
+		asCharacter->RequestGunFromServer(iWeaponType);
 	}
 }
 

@@ -84,7 +84,13 @@ void APortal_GE_IICharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
+	if (GetWorld())
+	{
+		asGameMode = Cast<APortalGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	}
+	
 	bCanShoot = false;
+	bCanShootPortal = false;
 
 	//request a gun from the server
 
@@ -134,82 +140,88 @@ void APortal_GE_IICharacter::SetupPlayerInputComponent(class UInputComponent* Pl
 
 void APortal_GE_IICharacter::OnFireLeft()
 {
-	// try and fire a projectile
-	if (ProjectileClass != nullptr && bCanShoot)
+	if (bCanShoot)
 	{
-		UWorld* const World = GetWorld();
-		if (World != nullptr)
+		// try and fire a projectile
+		if (ProjectileClass != nullptr)
 		{
-			const FRotator SpawnRotation = GetControlRotation();
-			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+			UWorld* const World = GetWorld();
+			if (World != nullptr)
+			{
+				const FRotator SpawnRotation = GetControlRotation();
+				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
 
-			//Set Spawn Collision Handling Override
-			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+				//Set Spawn Collision Handling Override
+				FActorSpawnParameters ActorSpawnParams;
+				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 
-			// spawn the projectile at the muzzle
-			APortal_GE_IIProjectile* spawnedProjectile = World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-			bCanPortalSpawn ? spawnedProjectile->bCanPortalSpawn = true : spawnedProjectile->bCanPortalSpawn = false; // allows the portal to spawn
-			spawnedProjectile->bPortalTypeToSpawn = true; // Blue Portal
+				// spawn the projectile at the muzzle
+				APortal_GE_IIProjectile* spawnedProjectile = World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+				bCanPortalSpawn ? spawnedProjectile->bCanPortalSpawn = true : spawnedProjectile->bCanPortalSpawn = false; // allows the portal to spawn
+				spawnedProjectile->bPortalTypeToSpawn = true; // Blue Portal
+			}
 		}
-	}
 
-	// try and play the sound if specified
-	if (FireSound != nullptr)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-	}
-
-	// try and play a firing animation if specified
-	if (FireAnimation != nullptr)
-	{
-		// Get the animation object for the arms mesh
-		UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
-		if (AnimInstance != nullptr)
+		// try and play the sound if specified
+		if (FireSound != nullptr)
 		{
-			AnimInstance->Montage_Play(FireAnimation, 1.f);
+			UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+		}
+
+		// try and play a firing animation if specified
+		if (FireAnimation != nullptr)
+		{
+			// Get the animation object for the arms mesh
+			UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
+			if (AnimInstance != nullptr)
+			{
+				AnimInstance->Montage_Play(FireAnimation, 1.f);
+			}
 		}
 	}
 }
 
 void APortal_GE_IICharacter::OnFireRight()
 {
-	// try and fire a projectile
-	if (ProjectileClass != nullptr)
+	if (bCanShootPortal)
 	{
-		UWorld* const World = GetWorld();
-		if (World != nullptr)
+		// try and fire a projectile
+		if (ProjectileClass != nullptr)
 		{
-			const FRotator SpawnRotation = GetControlRotation();
-			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+			UWorld* const World = GetWorld();
+			if (World != nullptr)
+			{
+				const FRotator SpawnRotation = GetControlRotation();
+				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
 
-			//Set Spawn Collision Handling Override
-			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+				//Set Spawn Collision Handling Override
+				FActorSpawnParameters ActorSpawnParams;
+				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 
-			// spawn the projectile at the muzzle
-			APortal_GE_IIProjectile* spawnedProjectile = World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-			bCanPortalSpawn ? spawnedProjectile->bCanPortalSpawn = true : spawnedProjectile->bCanPortalSpawn = false; // allows the portal to spawn
-			spawnedProjectile->bPortalTypeToSpawn = false; //Orange Portal
+				// spawn the projectile at the muzzle
+				APortal_GE_IIProjectile* spawnedProjectile = World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+				bCanPortalSpawn ? spawnedProjectile->bCanPortalSpawn = true : spawnedProjectile->bCanPortalSpawn = false; // allows the portal to spawn
+				spawnedProjectile->bPortalTypeToSpawn = false; //Orange Portal
+			}
 		}
-	}
 
-	// try and play the sound if specified
-	if (FireSound != nullptr)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-	}
-
-	// try and play a firing animation if specified
-	if (FireAnimation != nullptr)
-	{
-		// Get the animation object for the arms mesh
-		UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
-		if (AnimInstance != nullptr)
+		// try and play the sound if specified
+		if (FireSound != nullptr)
 		{
-			AnimInstance->Montage_Play(FireAnimation, 1.f);
+			UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+		}
+
+		// try and play a firing animation if specified
+		if (FireAnimation != nullptr)
+		{
+			// Get the animation object for the arms mesh
+			UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
+			if (AnimInstance != nullptr)
+			{
+				AnimInstance->Montage_Play(FireAnimation, 1.f);
+			}
 		}
 	}
 }
@@ -304,5 +316,13 @@ bool APortal_GE_IICharacter::CanPortalSpawn(float fLinecastLength, FName sTag, f
 		}
 	}
 	return false;
+}
+
+void APortal_GE_IICharacter::RequestGunFromServer(int32 WeaponTypePayload)
+{
+	if (HasAuthority())
+	{
+		asGameMode->SR_SpawnWeaponInPlayer(this, WeaponTypePayload);
+	}
 }
 
