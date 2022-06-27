@@ -9,7 +9,7 @@ APortal_GE_IIProjectile::APortal_GE_IIProjectile()
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->InitSphereRadius(5.0f);
 	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");
-	CollisionComp->OnComponentHit.AddDynamic(this, &APortal_GE_IIProjectile::OnHit);		// set up a notification for when this component hits something blocking
+	CollisionComp->OnComponentHit.AddDynamic(this, &APortal_GE_IIProjectile::OnHit);// set up a notification for when this component hits something blocking
 
 	// Players can't walk on it
 	CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
@@ -35,6 +35,10 @@ void APortal_GE_IIProjectile::BeginPlay()
 	Super::BeginPlay();
 	SetOwner(gameStateRef);
 	asGameState = Cast<APortalGameState>(gameStateRef);
+	if (GetWorld())
+	{
+		asGameMode = Cast<APortalGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	}
 	asPortalManager = Cast<APortalManager>(UGameplayStatics::GetActorOfClass(this, portalManagerBpRef));
 }
 
@@ -46,7 +50,7 @@ void APortal_GE_IIProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherA
 		if (Hit.GetActor()->ActorHasTag("Wall") && bCanPortalSpawn)
 		{
 			//call a  run-on-server function that calls a multi cast that spawns the portal in every client
-			SR_SpawnPortals(Hit.Location, bPortalTypeToSpawn);
+			SR_SpawnPortals(Hit.Location, bPortalTypeToSpawn, Hit);
 			
 			bCanPortalSpawn = false;
 		}
@@ -54,10 +58,34 @@ void APortal_GE_IIProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherA
 	}
 }
 
-void APortal_GE_IIProjectile::SR_SpawnPortals_Implementation(FVector location, bool portalType)
+void APortal_GE_IIProjectile::SR_SpawnPortals_Implementation(FVector location, bool portalType, FHitResult hitResult)
 {
 	if (HasAuthority())
 	{
-		asGameState->SpawnPortalOnAllClients(location, portalType, asPortalManager);
+		asGameState->SpawnPortalOnAllClients(location, portalType, asPortalManager, hitResult);
+	}
+}
+
+void APortal_GE_IIProjectile::SR_GetBulletParams_Implementation(int32 weaponTypeIndexPayload)
+{
+	SetDamage(asGameMode->GetWeaponDamage(weaponTypeIndexPayload));
+	ProjectileMovement->InitialSpeed = asGameMode->GetBulletSpeed(weaponTypeIndexPayload);
+	ProjectileMovement->ProjectileGravityScale = asGameMode->GetBulletGravityScale(weaponTypeIndexPayload);
+}
+
+void APortal_GE_IIProjectile::GetBulletParameters(int32 weaponTypeIndexPayload)
+{
+	if (HasAuthority())
+	{
+		if (asGameMode)
+		{
+			SetDamage(asGameMode->GetWeaponDamage(weaponTypeIndexPayload));
+			ProjectileMovement->InitialSpeed = asGameMode->GetBulletSpeed(weaponTypeIndexPayload);
+			ProjectileMovement->ProjectileGravityScale = asGameMode->GetBulletGravityScale(weaponTypeIndexPayload);
+		}
+	}
+	else
+	{
+		SR_GetBulletParams(weaponTypeIndexPayload);
 	}
 }

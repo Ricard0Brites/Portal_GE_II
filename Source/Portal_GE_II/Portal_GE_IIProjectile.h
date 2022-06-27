@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
 #include "PortalManager.h"
+#include "Public/PortalGameMode.h"
 #include "PortalGameState.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
@@ -43,6 +44,8 @@ public:
 		AActor* gameStateRef;
 
 	APortalGameState* asGameState;
+
+	APortalGameMode* asGameMode;
 #pragma endregion
 
 protected:
@@ -74,12 +77,23 @@ public:
 	bool bCanPortalSpawn = false;
 #pragma endregion
 
-#pragma region Multiplayer
+#pragma region MyParameters
 private:
-	UFUNCTION( Server, Unreliable, BlueprintCallable )
-		void SR_SpawnPortals(FVector location, bool portalType);
+	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true));
+	float fDamage;
+public:
+	void SetDamage(float Val) { fDamage = Val; }
 #pragma endregion
 
 
+#pragma region Multiplayer
+private:
+	UFUNCTION( Server, Reliable, BlueprintCallable )
+		void SR_SpawnPortals(FVector location, bool portalType, FHitResult hitResult);
+	UFUNCTION(Server, Reliable)
+		void SR_GetBulletParams(int32 weaponTypeIndexPayload);
+public:
+	void GetBulletParameters(int32 weaponTypeIndexPayload);
+#pragma endregion
 };
 

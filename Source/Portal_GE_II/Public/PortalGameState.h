@@ -21,5 +21,5 @@ private:
 
 public:
 		UFUNCTION(NetMulticast, Unreliable)
-			void SpawnPortalOnAllClients(FVector location, bool portalType, APortalManager* portalManagerRef);
+			void SpawnPortalOnAllClients(FVector location, bool portalType, APortalManager* portalManagerRef, FHitResult hit);
 };

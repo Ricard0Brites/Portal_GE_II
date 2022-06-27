@@ -8,6 +8,9 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Math/UnrealMathUtility.h"
 #include "GameFramework/MovementComponent.h"
+
+#include "Public/PortalGameMode.h"
+
 #include "Portal_GE_IICharacter.generated.h"
 
 class UInputComponent;
@@ -18,37 +21,12 @@ class UMotionControllerComponent;
 class UAnimMontage;
 class USoundBase;
 
+class APortalGameMode;
+
 UCLASS(config=Game)
 class APortal_GE_IICharacter : public ACharacter
 {
 	GENERATED_BODY()
-
-#pragma region Components
-		/** Pawn mesh: 1st person view (arms; seen only by self) */
-		UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = true))
-		USkeletalMeshComponent* Mesh1P;
-
-	/** Pawn mesh: 3rd person view (full mesh ) */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly,Category = Mesh, meta = (AllowPrivateAccess = true))
-		USkeletalMeshComponent* Mesh3P;
-
-	/** Gun mesh: 1st person view (seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
-		USkeletalMeshComponent* FP_Gun;
-
-	/** Gun mesh: 3st person view (seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
-		USkeletalMeshComponent* FP_Gun3P;
-
-	/** Location on gun mesh where projectiles should spawn. */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
-		USceneComponent* FP_MuzzleLocation;
-
-	/** First person camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		UCameraComponent* FirstPersonCameraComponent;
-#pragma endregion
-
 
 public:
 	APortal_GE_IICharacter();
@@ -72,7 +50,7 @@ public:
 		FVector GunOffset;
 
 	/** Projectile class to spawn */
-	UPROPERTY(EditDefaultsOnly, Category = Projectile)
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 		TSubclassOf<class APortal_GE_IIProjectile> ProjectileClass;
 
 	/** Sound to play each time we fire */
@@ -85,8 +63,40 @@ public:
 
 #pragma endregion
 
+#pragma region Components
+private:
+	/** Pawn mesh: 1st person view (arms; seen only by self) */
+	UPROPERTY(BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = true))
+		USkeletalMeshComponent* Mesh1P;
+
+	/** Pawn mesh: 3rd person view (full mesh ) */
+	UPROPERTY(BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
+		USkeletalMeshComponent* Mesh3P;
+	/** Gun mesh: 1st person view (seen only by self) */
+	UPROPERTY(BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = true))
+		USkeletalMeshComponent* FP_Gun;
+public:
+	USkeletalMeshComponent* GetMesh1P() { return Mesh1P; }
+	USceneComponent* GetRootComponent() { return RootComponent; }
+
+private:
+	/** Gun mesh: 3st person view (seen only by self) */
+	UPROPERTY(BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
+		USkeletalMeshComponent* FP_Gun3P;
+
+	/** Location on gun mesh where projectiles should spawn. */
+	UPROPERTY(BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
+		USceneComponent* FP_MuzzleLocation;
+
+	/** First person camera */
+	UPROPERTY(BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		UCameraComponent* FirstPersonCameraComponent;
+public:
+	UPROPERTY(BlueprintReadWrite)
+		UMovementComponent* movementComp;
+#pragma endregion
+
 protected:
-	
 #pragma region Inputs
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
@@ -118,6 +128,9 @@ protected:
 
 	
 
+
+	bool bCanShoot;
+	bool bCanShootPortal;
 #pragma endregion
 
 public:
@@ -131,9 +144,7 @@ public:
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 #pragma endregion
 
-
 private:
-	
 #pragma region PortalCrosshairCheck
 
 	/** 
@@ -156,16 +167,14 @@ private:
 		float portalHeight;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Portal", meta = (AllowPrivateAccess = true))
-		FName climbableTag;
+		FName acceptableTag;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Portal", meta = (AllowPrivateAccess = true))
 		bool bCanPortalSpawn;
 #pragma endregion
 
-#pragma region PortalSpawnRotation
 public:
-	FRotator portalSpawnRotation;
-#pragma endregion
+	APortalGameMode* asGameMode;
 
 #pragma region HealthSystem
 protected:
@@ -184,7 +193,25 @@ protected:
 	/** Response to health being updated. Called on the server immediately after modification, and on clients in response to a RepNotify*/
 	void OnHealthUpdate();
 
+#pragma region Weapon
+private:
+	/*
+	* this value is 0 based
+	*/
+		UPROPERTY(EditDefaultsOnly, Category = "Weapon Type", meta = (AllowPrivateAccess = true))
+			int32 iPortalGunIndex;
+protected:
+	int32 iWeaponType;
+	int32 iAmmoAmount;
 public:
+	void RequestGunFromServer(int32 WeaponTypePayload, APortal_GE_IICharacter* charRef);
+	void SetWeaponType(int32 payload) { iWeaponType = payload; }
+	void SetCanShoot(bool payload) { bCanShoot = payload; }
+	void SetAmmoAmount(int32 ammoAmountPayload) { iAmmoAmount = ammoAmountPayload; }
+	void SetCanShootPortals(bool payload) { bCanShootPortal = payload; }
+protected:
+	UFUNCTION( BlueprintImplementableEvent )
+		void ChangeGunColor(FLinearColor colorToChangeTo);
 
 	/** Getter for Max Health.*/
 	UFUNCTION(BlueprintPure, Category="Health")
@@ -212,6 +239,17 @@ public:
 
 
 
+protected:
+	/*
+* weapon type:
+*	0-> Assault Rifle
+*	1-> Shotgun
+*	2-> Rocket Launcher
+*	3-> Portal Gun
+*/
+	UFUNCTION( Server, Reliable )
+	void GivePlayerAGun(int32 weaponTypePayload, APortal_GE_IICharacter* charRef);
+#pragma endregion
 };
 
 

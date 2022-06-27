@@ -5,6 +5,7 @@
 #include "Portal_GE_IICharacter.h"
 #include "UObject/ConstructorHelpers.h"
 
+
 APortal_GE_IIGameMode::APortal_GE_IIGameMode() : Super()
 {
 	// set default pawn class to our Blueprinted character
