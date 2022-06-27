@@ -105,66 +105,8 @@ void APortal_GE_IICharacter::BeginPlay()
 void APortal_GE_IICharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	bCanPortalSpawn = CanPortalSpawn(lineCastLength, acceptableTag, portalWidth, portalHeight);
+	bCanPortalSpawn = CanPortalSpawn(lineCastLength, climbableTag, portalWidth, portalHeight);
 
-}
-
-bool APortal_GE_IICharacter::CanPortalSpawn(float fLinecastLength, FName sTag, float fPortalWidth, float fPortalHeight)
-{
-	if (GetWorld())
-	{
-		
-		FVector LineCastEndLocation = GetControlRotation().Vector();
-		FVector LineCastStartLocation = FP_Gun->GetComponentLocation();
-
-		// Line Trace to determine if the object the player is looking at is a wall that accepts portals
-		FHitResult result;
-		bool bWasLineCastSuccessful = GetWorld()->LineTraceSingleByChannel(result, LineCastStartLocation, (LineCastEndLocation * fLinecastLength) + LineCastStartLocation, ECC_Visibility);
-		if (bWasLineCastSuccessful)
-		{
-			if (result.GetActor()->ActorHasTag(sTag) == true)
-			{
-				FHitResult hitResult;
-				//changes the X for the Y to create a new normal vector orthogonal to the wall
-				FVector vNewNormal = FVector(result.Normal.Y, result.Normal.X, result.Normal.Z);
-				FVector vZnormal = FVector(0, 0, 1);
-
-				//horizontal left line trace
-				bool bWasHorizontalLinecastNegativeSpaceSuccessful = GetWorld()->LineTraceSingleByChannel(
-					hitResult,
-					result.Location + result.Normal,
-					((result.Location + result.Normal) - (vNewNormal * (fPortalWidth / 2))),
-					ECC_Visibility);
-
-				//horizontal right line trace
-				bool bWasHorizontalLinecastPositiveSpaceSuccessful = GetWorld()->LineTraceSingleByChannel(
-					hitResult,
-					result.Location + result.Normal,
-					((vNewNormal * (fPortalWidth / 2)) + result.Location + result.Normal),
-					ECC_Visibility);
-
-				//Vertical top line Trace
-				bool bWasVerticalLinecastPositiveSpaceSuccessful = GetWorld()->LineTraceSingleByChannel(
-					hitResult,
-					result.Location + result.Normal,
-					((vZnormal * fPortalHeight) + (result.Location + result.Normal)),
-					ECC_Visibility);
-
-				//Vertical Bottom Line Trace
-				bool bWasVerticalLineCastNegativeSpaceSuccessful = GetWorld()->LineTraceSingleByChannel(
-					hitResult,
-					result.Location + result.Normal,
-					((result.Location + result.Normal) - (vZnormal * fPortalHeight)),
-					ECC_Visibility);
-
-				if (!bWasHorizontalLinecastNegativeSpaceSuccessful && !bWasHorizontalLinecastPositiveSpaceSuccessful && !bWasVerticalLineCastNegativeSpaceSuccessful && !bWasVerticalLinecastPositiveSpaceSuccessful)
-				{
-					return true;
-				}
-			}
-		}
-	}
-	return false;
 }
 
 #pragma region Input
@@ -202,7 +144,8 @@ void APortal_GE_IICharacter::OnFireLeft()
 		// try and fire a projectile
 		if (ProjectileClass != nullptr)
 		{
-			if (GetWorld() != nullptr)
+			UWorld* const World = GetWorld();
+			if (World != nullptr)
 			{
 				const FRotator SpawnRotation = GetControlRotation();
 				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
@@ -213,7 +156,7 @@ void APortal_GE_IICharacter::OnFireLeft()
 				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 
 				// spawn the projectile at the muzzle
-				APortal_GE_IIProjectile* spawnedProjectile = GetWorld()->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+				APortal_GE_IIProjectile* spawnedProjectile = World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 				bCanPortalSpawn ? spawnedProjectile->bCanPortalSpawn = true : spawnedProjectile->bCanPortalSpawn = false; // allows the portal to spawn
 				spawnedProjectile->bPortalTypeToSpawn = true; // Blue Portal
 			}
@@ -313,6 +256,68 @@ void APortal_GE_IICharacter::LookUpAtRate(float Rate)
 }
 
 #pragma endregion
+
+bool APortal_GE_IICharacter::CanPortalSpawn(float fLinecastLength, FName sTag, float fPortalWidth, float fPortalHeight)
+{
+	if (GetWorld())
+	{
+		FVector LineCastEndLocation = GetControlRotation().Vector();
+		FVector LineCastStartLocation = FVector(0,0,0); //FP_Gun->GetComponentLocation();
+
+		// Line Trace to determine if the object the player is looking at is a wall that accepts portals
+		FHitResult result;
+
+		bool bWasLineCastSuccessful = GetWorld()->LineTraceSingleByChannel(result, LineCastStartLocation, (LineCastEndLocation * fLinecastLength) + LineCastStartLocation,ECC_Visibility);
+
+		if (bWasLineCastSuccessful)
+		{
+			if (result.GetActor()->ActorHasTag(sTag) == true)
+			{
+
+				FHitResult hitResult;
+				//changes the X for the Y to create a new normal vector orthogonal to the wall
+				FVector vNewNormal = FVector(result.Normal.Y, result.Normal.X, result.Normal.Z);
+				FVector vZnormal = FVector(0, 0, 1);
+
+				//horizontal left line trace
+				bool bWasHorizontalLinecastNegativeSpaceSuccessful = GetWorld()->LineTraceSingleByChannel(
+					hitResult,
+					result.Location + result.Normal,
+					((result.Location + result.Normal) - (vNewNormal * (fPortalWidth / 2))),
+					ECC_Visibility);
+
+				//horizontal right line trace
+				bool bWasHorizontalLinecastPositiveSpaceSuccessful = GetWorld()->LineTraceSingleByChannel(
+					hitResult,
+					result.Location + result.Normal,
+					((vNewNormal * (fPortalWidth / 2)) + result.Location + result.Normal),
+					ECC_Visibility);
+
+				//Vertical top line Trace
+				bool bWasVerticalLinecastPositiveSpaceSuccessful = GetWorld()->LineTraceSingleByChannel(
+					hitResult,
+					result.Location + result.Normal,
+					((vZnormal * fPortalHeight) + (result.Location + result.Normal)),
+					ECC_Visibility);
+
+				//Vertical Bottom Line Trace
+				bool bWasVerticalLineCastNegativeSpaceSuccessful = GetWorld()->LineTraceSingleByChannel(
+					hitResult,
+					result.Location + result.Normal,
+					((result.Location + result.Normal) - (vZnormal * fPortalHeight)),
+					ECC_Visibility);
+
+				if (!bWasHorizontalLinecastNegativeSpaceSuccessful && !bWasHorizontalLinecastPositiveSpaceSuccessful && !bWasVerticalLineCastNegativeSpaceSuccessful && !bWasVerticalLinecastPositiveSpaceSuccessful)
+				{
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+
 
 #pragma region Server
 void APortal_GE_IICharacter::RequestGunFromServer(int32 WeaponTypePayload, APortal_GE_IICharacter* charRef)

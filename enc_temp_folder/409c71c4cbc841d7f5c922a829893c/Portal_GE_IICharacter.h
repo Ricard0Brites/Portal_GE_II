@@ -161,7 +161,7 @@ private:
 		float portalHeight;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Portal", meta = (AllowPrivateAccess = true))
-		FName acceptableTag;
+		FName climbableTag;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Portal", meta = (AllowPrivateAccess = true))
 		bool bCanPortalSpawn;
