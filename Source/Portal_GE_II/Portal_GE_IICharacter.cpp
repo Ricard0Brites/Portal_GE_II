@@ -185,6 +185,7 @@ float APortal_GE_IICharacter::TakeDamage(float DamageTaken, struct FDamageEvent 
 	SetCurrentHealth(damageApplied);
 	return damageApplied;
 }
+
 #pragma endregion 
 
 
@@ -281,10 +282,6 @@ void APortal_GE_IICharacter::OnFireLeft()
 		// try and fire a projectile
 		if (ProjectileClass != nullptr)
 		{
-			
-			const FRotator SpawnRotation = GetControlRotation();
-			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
 			if (GetWorld() != nullptr)
 			{
 				const FRotator SpawnRotation = GetControlRotation();
