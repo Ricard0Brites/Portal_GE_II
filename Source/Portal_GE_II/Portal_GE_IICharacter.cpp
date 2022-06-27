@@ -214,8 +214,24 @@ void APortal_GE_IICharacter::OnFireLeft()
 
 				// spawn the projectile at the muzzle
 				APortal_GE_IIProjectile* spawnedProjectile = GetWorld()->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-				bCanPortalSpawn ? spawnedProjectile->bCanPortalSpawn = true : spawnedProjectile->bCanPortalSpawn = false; // allows the portal to spawn
-				spawnedProjectile->bPortalTypeToSpawn = true; // Blue Portal
+				
+				//portal properties
+				if (bCanShootPortal)
+				{
+					bCanPortalSpawn ? spawnedProjectile->bCanPortalSpawn = true : spawnedProjectile->bCanPortalSpawn = false; // allows the portal to spawn
+					spawnedProjectile->bPortalTypeToSpawn = true; // Blue Portal
+				}	
+				
+				switch (iWeaponType)
+				{
+					case 0:
+						//set damage in bullet
+						//set bullet speed
+						//decrement ammo
+						break;
+					default:
+						break;
+				}
 			}
 		}
 
@@ -348,6 +364,8 @@ void APortal_GE_IICharacter::RequestGunFromServer(int32 WeaponTypePayload, APort
 
 			//activate player can shoot
 			charRef->SetCanShoot(true);
+			//allows the gun to shoot portals
+			charRef->SetCanShootPortals(false);
 			//set weapon type
 			charRef->SetWeaponType(WeaponTypePayload);
 			//change gun color
@@ -384,6 +402,8 @@ void APortal_GE_IICharacter::GivePlayerAGun_Implementation(int32 weaponTypePaylo
 	{
 		//activate player can shoot
 		charRef->SetCanShoot(true);
+		//allows the gun to shoot portals
+		charRef->SetCanShootPortals(false);
 		//set weapon type
 		charRef->SetWeaponType(weaponTypePayload);
 		//change gun color

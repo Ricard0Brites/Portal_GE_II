@@ -178,13 +178,13 @@ private:
 		UPROPERTY(EditDefaultsOnly, Category = "Weapon Type", meta = (AllowPrivateAccess = true))
 			int32 iPortalGunIndex;
 protected:
-	int32 myWeaponType;
-	int32 ammoAmount;
+	int32 iWeaponType;
+	int32 iAmmoAmount;
 public:
 	void RequestGunFromServer(int32 WeaponTypePayload, APortal_GE_IICharacter* charRef);
-	void SetWeaponType(int32 payload) { myWeaponType = payload; }
+	void SetWeaponType(int32 payload) { iWeaponType = payload; }
 	void SetCanShoot(bool payload) { bCanShoot = payload; }
-	void SetAmmoAmount(int32 ammoAmountPayload) { ammoAmount = ammoAmountPayload; }
+	void SetAmmoAmount(int32 ammoAmountPayload) { iAmmoAmount = ammoAmountPayload; }
 	void SetCanShootPortals(bool payload) { bCanShootPortal = payload; }
 protected:
 	UFUNCTION( BlueprintImplementableEvent )
