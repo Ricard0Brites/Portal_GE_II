@@ -322,38 +322,81 @@ bool APortal_GE_IICharacter::CanPortalSpawn(float fLinecastLength, FName sTag, f
 #pragma region Server
 void APortal_GE_IICharacter::RequestGunFromServer(int32 WeaponTypePayload, APortal_GE_IICharacter* charRef)
 {
-
-	if (HasAuthority())
+	//if its not the portal gun
+	if (WeaponTypePayload == iPortalGunIndex)
 	{
-		APortal_GE_IICharacter* asChar = Cast < APortal_GE_IICharacter >(charRef);
+		//this is the portal Gun
+		if (HasAuthority())
+		{
 
-		//activate player can shoot
-		asChar->SetCanShoot(true);
-		//set weapon type
-		asChar->SetWeaponType(WeaponTypePayload);
-		//change gun color
-		asChar->ChangeGunColor(asGameMode->GetWeaponColor(WeaponTypePayload));
-		//add ammo
-		asChar->SetAmmoAmount(asGameMode->GetWeaponAmmoAmount(WeaponTypePayload));
-
+			//activate player can shoot
+			charRef->SetCanShoot(true);
+			//allows the gun to shoot portals
+			charRef->SetCanShootPortals(true);
+			//set weapon type
+			charRef->SetWeaponType(WeaponTypePayload);
+			//change gun color
+			charRef->ChangeGunColor(asGameMode->GetWeaponColor(WeaponTypePayload));
+			//portal gun has no ammo
+		}
+		else
+		{
+			//rpc
+			GivePlayerAGun(WeaponTypePayload, charRef);
+		}
 	}
 	else
 	{
-		//rpc
-		GivePlayerAGun(WeaponTypePayload, charRef);
+		
+		if (HasAuthority())
+		{
+
+			//activate player can shoot
+			charRef->SetCanShoot(true);
+			//set weapon type
+			charRef->SetWeaponType(WeaponTypePayload);
+			//change gun color
+			charRef->ChangeGunColor(asGameMode->GetWeaponColor(WeaponTypePayload));
+			//add ammo
+			charRef->SetAmmoAmount(asGameMode->GetWeaponAmmoAmount(WeaponTypePayload));
+		}
+		else
+		{
+			//rpc
+			GivePlayerAGun(WeaponTypePayload, charRef);
+		}
 	}
 }
 void APortal_GE_IICharacter::GivePlayerAGun_Implementation(int32 weaponTypePayload, APortal_GE_IICharacter* charRef)
 {
-	APortal_GE_IICharacter* asChar = Cast < APortal_GE_IICharacter >(charRef);
-	//activate player can shoot
-	asChar->SetCanShoot(true);
-	//set weapon type
-	asChar->SetWeaponType(weaponTypePayload);
-	//change gun color
-	asChar->ChangeGunColor(asGameMode->GetWeaponColor(weaponTypePayload));
-	//add ammo
-	asChar->SetAmmoAmount(asGameMode->GetWeaponAmmoAmount(weaponTypePayload));
+	if (weaponTypePayload == iPortalGunIndex)
+	{
+		//this is the portal Gun
+		
+
+
+		//activate player can shoot
+		charRef->SetCanShoot(true);
+		//allows the gun to shoot portals
+		charRef->SetCanShootPortals(true);
+		//set weapon type
+		charRef->SetWeaponType(weaponTypePayload);
+		//change gun color
+		charRef->ChangeGunColor(asGameMode->GetWeaponColor(weaponTypePayload));
+		//portal gun has no ammo
+	}
+	else
+	{
+		//activate player can shoot
+		charRef->SetCanShoot(true);
+		//set weapon type
+		charRef->SetWeaponType(weaponTypePayload);
+		//change gun color
+		charRef->ChangeGunColor(asGameMode->GetWeaponColor(weaponTypePayload));
+		//add ammo
+		charRef->SetAmmoAmount(asGameMode->GetWeaponAmmoAmount(weaponTypePayload));
+	}
+	
 }
 #pragma endregion
 

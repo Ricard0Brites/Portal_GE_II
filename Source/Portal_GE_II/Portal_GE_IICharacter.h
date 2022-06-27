@@ -171,6 +171,12 @@ public:
 	APortalGameMode* asGameMode;
 
 #pragma region Weapon
+private:
+	/*
+	* this value is 0 based
+	*/
+		UPROPERTY(EditDefaultsOnly, Category = "Weapon Type", meta = (AllowPrivateAccess = true))
+			int32 iPortalGunIndex;
 protected:
 	int32 myWeaponType;
 	int32 ammoAmount;
@@ -179,6 +185,7 @@ public:
 	void SetWeaponType(int32 payload) { myWeaponType = payload; }
 	void SetCanShoot(bool payload) { bCanShoot = payload; }
 	void SetAmmoAmount(int32 ammoAmountPayload) { ammoAmount = ammoAmountPayload; }
+	void SetCanShootPortals(bool payload) { bCanShootPortal = payload; }
 protected:
 	UFUNCTION( BlueprintImplementableEvent )
 		void ChangeGunColor(FLinearColor colorToChangeTo);
