@@ -66,32 +66,30 @@ public:
 #pragma region Components
 private:
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = true))
+	UPROPERTY(BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USkeletalMeshComponent* Mesh1P;
 
 	/** Pawn mesh: 3rd person view (full mesh ) */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
+	UPROPERTY(BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USkeletalMeshComponent* Mesh3P;
-
-public:
 	/** Gun mesh: 1st person view (seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
+	UPROPERTY(BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USkeletalMeshComponent* FP_Gun;
-
+public:
 	USkeletalMeshComponent* GetMesh1P() { return Mesh1P; }
 	USceneComponent* GetRootComponent() { return RootComponent; }
 
 private:
 	/** Gun mesh: 3st person view (seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
+	UPROPERTY(BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USkeletalMeshComponent* FP_Gun3P;
 
 	/** Location on gun mesh where projectiles should spawn. */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
+	UPROPERTY(BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USceneComponent* FP_MuzzleLocation;
 
 	/** First person camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		UCameraComponent* FirstPersonCameraComponent;
 public:
 	UPROPERTY(BlueprintReadWrite)
@@ -173,11 +171,28 @@ public:
 	APortalGameMode* asGameMode;
 
 #pragma region Weapon
-	uint32 myWeaponType;
+protected:
+	int32 myWeaponType;
+	int32 ammoAmount;
 public:
-	void RequestGunFromServer(int32 WeaponTypePayload);
+	void RequestGunFromServer(int32 WeaponTypePayload, APortal_GE_IICharacter* charRef);
 	void SetWeaponType(int32 payload) { myWeaponType = payload; }
 	void SetCanShoot(bool payload) { bCanShoot = payload; }
+	void SetAmmoAmount(int32 ammoAmountPayload) { ammoAmount = ammoAmountPayload; }
+protected:
+	UFUNCTION( BlueprintImplementableEvent )
+		void ChangeGunColor(FLinearColor colorToChangeTo);
+
+protected:
+	/*
+* weapon type:
+*	0-> Assault Rifle
+*	1-> Shotgun
+*	2-> Rocket Launcher
+*	3-> Portal Gun
+*/
+	UFUNCTION( Server, Reliable )
+	void GivePlayerAGun(int32 weaponTypePayload, APortal_GE_IICharacter* charRef);
 #pragma endregion
 };
 

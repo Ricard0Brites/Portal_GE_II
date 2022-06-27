@@ -52,7 +52,7 @@ void AWeaponPlatform::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComp, AAc
 	if (OtherActor->ActorHasTag("Character"))
 	{
 		APortal_GE_IICharacter* asCharacter = Cast<APortal_GE_IICharacter>(OtherActor);
-		asCharacter->RequestGunFromServer(iWeaponType);
+		asCharacter->RequestGunFromServer(iWeaponType, asCharacter);
 	}
 }
 

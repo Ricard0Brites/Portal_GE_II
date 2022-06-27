@@ -53,13 +53,12 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 	Mesh3P->SetRelativeLocation(FVector(0,0,-90));
 	Mesh3P->SetRelativeRotation(FRotator(0,-90,0));
 
-	//// Create a gun mesh component
-	//FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
-	//FP_Gun->SetOnlyOwnerSee(true);			// otherwise won't be visible in the multiplayer
-	//FP_Gun->bCastDynamicShadow = false;
-	//FP_Gun->CastShadow = false;
-	//// FP_Gun->SetupAttachment(Mesh1P, TEXT("GripPoint"));
-	//FP_Gun->SetupAttachment(RootComponent);
+	// Create a gun mesh component
+	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
+	FP_Gun->SetOnlyOwnerSee(true);			// otherwise won't be visible in the multiplayer
+	FP_Gun->bCastDynamicShadow = false;
+	FP_Gun->CastShadow = false;
+	//FP_Gun->SetupAttachment(Mesh1P, TEXT("GripPoint"));
 
 	// Create a gun mesh component
 	FP_Gun3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun3Person"));
@@ -71,9 +70,9 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 	FP_Gun3P->SetRelativeRotation(FRotator(	0, 100, 0));
 
 
-	/*FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
+	FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
 	FP_MuzzleLocation->SetupAttachment(FP_Gun);
-	FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));*/
+	FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));
 
 	// Default offset from the character location for projectiles to spawn
 	GunOffset = FVector(100.0f, 0.0f, 10.0f);
@@ -95,7 +94,7 @@ void APortal_GE_IICharacter::BeginPlay()
 	//request a gun from the server
 
 	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
-	//FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
 
 	// Show or hide the two versions of the gun based on whether or not we're using motion controllers.
 	Mesh1P->SetHiddenInGame(false, true);
@@ -318,11 +317,44 @@ bool APortal_GE_IICharacter::CanPortalSpawn(float fLinecastLength, FName sTag, f
 	return false;
 }
 
-void APortal_GE_IICharacter::RequestGunFromServer(int32 WeaponTypePayload)
+
+
+#pragma region Server
+void APortal_GE_IICharacter::RequestGunFromServer(int32 WeaponTypePayload, APortal_GE_IICharacter* charRef)
 {
+
 	if (HasAuthority())
 	{
-		asGameMode->SR_SpawnWeaponInPlayer(this, WeaponTypePayload);
+		APortal_GE_IICharacter* asChar = Cast < APortal_GE_IICharacter >(charRef);
+
+		//activate player can shoot
+		asChar->SetCanShoot(true);
+		//set weapon type
+		asChar->SetWeaponType(WeaponTypePayload);
+		//change gun color
+		asChar->ChangeGunColor(asGameMode->GetWeaponColor(WeaponTypePayload));
+		//add ammo
+		asChar->SetAmmoAmount(asGameMode->GetWeaponAmmoAmount(WeaponTypePayload));
+
+	}
+	else
+	{
+		//rpc
+		GivePlayerAGun(WeaponTypePayload, charRef);
 	}
 }
+void APortal_GE_IICharacter::GivePlayerAGun_Implementation(int32 weaponTypePayload, APortal_GE_IICharacter* charRef)
+{
+	APortal_GE_IICharacter* asChar = Cast < APortal_GE_IICharacter >(charRef);
+	//activate player can shoot
+	asChar->SetCanShoot(true);
+	//set weapon type
+	asChar->SetWeaponType(weaponTypePayload);
+	//change gun color
+	asChar->ChangeGunColor(asGameMode->GetWeaponColor(weaponTypePayload));
+	//add ammo
+	asChar->SetAmmoAmount(asGameMode->GetWeaponAmmoAmount(weaponTypePayload));
+}
+#pragma endregion
+
 

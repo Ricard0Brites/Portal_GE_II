@@ -34,15 +34,8 @@ private:
 
 		
 public:
-	/*
-	* weapon type: 
-	*	0-> Assault Rifle
-	*	1-> Shotgun
-	*	2-> Rocket Launcher
-	*	3-> Portal Gun
-	*/
-	UFUNCTION( Server, Reliable )
-	void SR_SpawnWeaponInPlayer(APortal_GE_IICharacter* charRef, int32 weaponTypePayload);
-	
-	FLinearColor GetWeaponColor(int32 weaponType);
+
+	FLinearColor GetWeaponColor(int32 weaponTypePayload) { return lcWeaponColor[weaponTypePayload]; }
+	int32 GetWeaponAmmoAmount(int32 weaponTypePayload) { return iWeaponAmmo[weaponTypePayload]; }
+	float GetPlatformCooldown(int32 weaponTypePayload) { return fWeaponCooldown[weaponTypePayload]; }
 };
