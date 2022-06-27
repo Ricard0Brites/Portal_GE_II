@@ -14,6 +14,7 @@
 #include "Engine/World.h"
 #include "PortalManager.h"
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
+#include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -22,6 +23,10 @@ DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
 APortal_GE_IICharacter::APortal_GE_IICharacter()
 {
+
+	MaxHealth = 100.0f;
+	CurrentHealth = MaxHealth / 100;
+	
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 	RootComponent = GetCapsuleComponent();
@@ -98,6 +103,80 @@ void APortal_GE_IICharacter::Tick(float DeltaTime)
 
 }
 
+void APortal_GE_IICharacter::GetLifetimeReplicatedProps(TArray <FLifetimeProperty> & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//Replicate current health.
+	DOREPLIFETIME(APortal_GE_IICharacter, CurrentHealth);
+
+}
+
+
+#pragma region HealthSytem
+
+void APortal_GE_IICharacter::OnHealthUpdate()
+{
+	//Client-specific functionality
+	if (IsLocallyControlled())
+	{
+		FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHealth);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+
+		
+
+		if (CurrentHealth <= 0)
+		{
+			//	this->Destroy();
+			FString deathMessage = FString::Printf(TEXT("You have been killed."));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+		}
+	}
+
+	//Server-specific functionality
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		FString healthMessage = FString::Printf(TEXT("%s now has %f health remaining."), *GetFName().ToString(), CurrentHealth);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+
+		
+	}
+	
+	//Functions that occur on all machines. 
+	 
+	
+	if (CurrentHealth <= 0)
+	{
+		this->Destroy();
+		//	FString deathMessage = FString::Printf(TEXT("You have been killed."));
+		//	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+	}
+}
+
+
+void  APortal_GE_IICharacter::OnRep_CurrentHealth()
+{
+	OnHealthUpdate();
+}
+
+void APortal_GE_IICharacter::SetCurrentHealth(float healthValue)
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		CurrentHealth = FMath::Clamp(healthValue, 0.f, MaxHealth);
+		OnHealthUpdate();
+	}
+}
+
+float APortal_GE_IICharacter::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float damageApplied = CurrentHealth - DamageTaken;
+	SetCurrentHealth(damageApplied);
+	return damageApplied;
+}
+#pragma endregion 
+
+
 #pragma region Input
 
 void APortal_GE_IICharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -134,6 +213,7 @@ void APortal_GE_IICharacter::OnFireLeft()
 		UWorld* const World = GetWorld();
 		if (World != nullptr)
 		{
+			
 			const FRotator SpawnRotation = GetControlRotation();
 			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 			const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
