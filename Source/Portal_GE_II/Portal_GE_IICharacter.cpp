@@ -216,21 +216,23 @@ void APortal_GE_IICharacter::OnFireLeft()
 				APortal_GE_IIProjectile* spawnedProjectile = GetWorld()->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 				
 				//portal properties
+				spawnedProjectile->bCanPortalSpawn = false; //makes sure the portal isnt accidentally spawned
 				if (bCanShootPortal)
 				{
 					bCanPortalSpawn ? spawnedProjectile->bCanPortalSpawn = true : spawnedProjectile->bCanPortalSpawn = false; // allows the portal to spawn
 					spawnedProjectile->bPortalTypeToSpawn = true; // Blue Portal
 				}	
 				
-				switch (iWeaponType)
+				if (iWeaponType != iPortalGunIndex)
 				{
-					case 0:
-						//set damage in bullet
-						//set bullet speed
-						//decrement ammo
-						break;
-					default:
-						break;
+					//set bullet properties
+					spawnedProjectile->GetBulletParameters(iWeaponType);
+					//decrement ammo
+					iAmmoAmount -= 1;
+					if (iAmmoAmount <= 0)
+					{
+						bCanShoot = false;
+					}
 				}
 			}
 		}
