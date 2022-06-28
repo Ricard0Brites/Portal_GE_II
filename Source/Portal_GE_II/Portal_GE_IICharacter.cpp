@@ -232,13 +232,22 @@ void APortal_GE_IICharacter::OnFireLeft()
 				{
 					//set bullet properties
 					spawnedProjectile->SetBulletParameters(iWeaponType);
+					
 					//decrement ammo
-					iAmmoAmount -= 1;
-					SR_PlayerShotBullet(this);
-					if (iAmmoAmount <= 0)
+					if (iAmmoAmount > 0)
 					{
-						bCanShoot = false;
-						SR_SetCanShoot(this, false);
+						HasAuthority() ? iAmmoAmount -= 1 : SR_PlayerShotBullet(this);
+					}
+					// <= 1 because this is verified by the bullet, as such
+					if (!HasAuthority() && iAmmoAmount <= 1)
+					{
+						//set can shoot
+						HasAuthority() ? bCanShoot = false : SR_SetCanShoot(this, false);
+					}
+					else if(HasAuthority() && iAmmoAmount <= 0)
+					{
+						//set can shoot
+						HasAuthority() ? bCanShoot = false : SR_SetCanShoot(this, false);
 					}
 				}
 			}
@@ -473,12 +482,14 @@ void APortal_GE_IICharacter::SR_GivePlayerAGun_Implementation(int32 weaponTypePa
 void APortal_GE_IICharacter::SR_PlayerShotBullet_Implementation(APortal_GE_IICharacter* charRef)
 {
 	charRef->SetAmmoAmount(charRef->GetAmmoAmount() - 1);
+	charRef->OnRep_UpdateAmmoAmount();
 }
 
 //set bCanShoot server side
 void APortal_GE_IICharacter::SR_SetCanShoot_Implementation(APortal_GE_IICharacter* charRef, bool payload)
 {
 	charRef->SetCanShoot(payload);
+	charRef->OnRep_UpdateCanShoot();
 }
 #pragma endregion
 

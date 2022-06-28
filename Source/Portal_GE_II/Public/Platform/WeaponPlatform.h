@@ -29,15 +29,21 @@ protected:
 private:
 	UPROPERTY( EditDefaultsOnly, BlueprintReadWrite, Category = "Mesh",meta = ( AllowPrivateAccess = true ))
 		UStaticMeshComponent* platformMesh;
+
 	UPROPERTY( EditDefaultsOnly, BlueprintReadWrite, Category = "Mesh", meta = ( AllowPrivateAccess = true ))
 		UStaticMeshComponent* hologramMesh;
+
 	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Visuals", meta	= ( AllowPrivateAccess = true ))
 		float fHologramRotationSpeed;
+
 	UPROPERTY( EditDefaultsOnly, BlueprintReadWrite, Category = "Collision", meta = (AllowPrivateAccess = true))
 		UBoxComponent* boxCollider;
+
 	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Object Type", meta = (AllowPrivateAccess = true))
 		int32 iObjectType;
+
 	APortalGameMode* asGameMode;
+
 	UFUNCTION()
 		virtual void OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 

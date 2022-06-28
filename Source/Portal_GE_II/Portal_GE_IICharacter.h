@@ -8,9 +8,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Math/UnrealMathUtility.h"
 #include "GameFramework/MovementComponent.h"
-
 #include "Public/PortalGameMode.h"
-
 #include "Portal_GE_IICharacter.generated.h"
 
 class UInputComponent;
@@ -61,6 +59,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		UAnimMontage* FireAnimation;
 
+#pragma endregion
+
+#pragma region DefaultFunctions
+	/** Returns Mesh1P subobject **/
+	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+
+	/** Returns FirstPersonCameraComponent subobject **/
+	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 #pragma endregion
 
 #pragma region Components
@@ -129,15 +135,6 @@ protected:
 	void LookUpAtRate(float Rate);
 #pragma endregion
 
-public:
-#pragma region DefaultFunctions
-	/** Returns Mesh1P subobject **/
-	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
-
-	/** Returns FirstPersonCameraComponent subobject **/
-	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
-#pragma endregion
-
 private:
 #pragma region PortalCrosshairCheck
 
@@ -165,6 +162,10 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Portal", meta = (AllowPrivateAccess = true))
 		bool bCanPortalSpawn;
+#pragma endregion
+
+#pragma region WeaponSling
+
 #pragma endregion
 
 
@@ -244,5 +245,4 @@ public:
 	// Variable replication
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 #pragma endregion
-
 };
