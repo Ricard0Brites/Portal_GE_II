@@ -13,15 +13,17 @@ AWeaponPlatform::AWeaponPlatform()
 	platformMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Platform Static Mesh Component"));
 	RootComponent = platformMesh;
 
-	weaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon Mesh"));
-	weaponMesh->SetupAttachment(RootComponent);
-	weaponMesh->SetRelativeLocation(FVector(0,0,100));
+	hologramMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon Mesh"));
+	hologramMesh->SetupAttachment(RootComponent);
+	hologramMesh->SetRelativeLocation(FVector(0,0,100));
 
 	boxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Collider"));
 	boxCollider->SetupAttachment(RootComponent);
 	boxCollider->SetRelativeScale3D(FVector(1,1,2));
 	boxCollider->SetRelativeLocation(FVector(0,0,60));
 	boxCollider->SetCollisionObjectType(ECC_WorldDynamic);
+
+	SetReplicates(true);
 	
 }
 
@@ -36,7 +38,7 @@ void AWeaponPlatform::BeginPlay()
 	}
 	if (asGameMode != nullptr)
 	{
-		ChangeGunMeshColor(asGameMode->GetWeaponColor(iWeaponType));
+		ChangeGunMeshColor(asGameMode->GetWeaponColor(iObjectType));
 	}
 }
 
@@ -44,7 +46,7 @@ void AWeaponPlatform::BeginPlay()
 void AWeaponPlatform::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	weaponMesh->SetRelativeRotation(FRotator(0, weaponMesh->GetRelativeRotation().Yaw + fWeaponRotationSpeed, 0));
+	hologramMesh->SetRelativeRotation(FRotator(0, hologramMesh->GetRelativeRotation().Yaw + fHologramRotationSpeed, 0));
 }
 
 void AWeaponPlatform::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -52,7 +54,7 @@ void AWeaponPlatform::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComp, AAc
 	if (OtherActor->ActorHasTag("Character"))
 	{
 		APortal_GE_IICharacter* asCharacter = Cast<APortal_GE_IICharacter>(OtherActor);
-		asCharacter->RequestGunFromServer(iWeaponType, asCharacter);
+		asCharacter->RequestGun(iObjectType, asCharacter);
 	}
 }
 

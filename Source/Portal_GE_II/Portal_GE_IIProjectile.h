@@ -93,7 +93,7 @@ private:
 	UFUNCTION(Server, Reliable)
 		void SR_GetBulletParams(int32 weaponTypeIndexPayload);
 public:
-	void GetBulletParameters(int32 weaponTypeIndexPayload);
+	void SetBulletParameters(int32 weaponTypeIndexPayload);
 #pragma endregion
 };
 

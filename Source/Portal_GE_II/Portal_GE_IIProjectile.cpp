@@ -73,7 +73,7 @@ void APortal_GE_IIProjectile::SR_GetBulletParams_Implementation(int32 weaponType
 	ProjectileMovement->ProjectileGravityScale = asGameMode->GetBulletGravityScale(weaponTypeIndexPayload);
 }
 
-void APortal_GE_IIProjectile::GetBulletParameters(int32 weaponTypeIndexPayload)
+void APortal_GE_IIProjectile::SetBulletParameters(int32 weaponTypeIndexPayload)
 {
 	if (HasAuthority())
 	{

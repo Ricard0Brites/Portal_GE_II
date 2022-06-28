@@ -12,20 +12,19 @@
 #include "MotionControllerComponent.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Engine/World.h"
+#include "Net/UnrealNetwork.h"
 #include "PortalManager.h"
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
-//////////////////////////////////////////////////////////////////////////
-// APortal_GE_IICharacter
-
+#pragma region Default
 APortal_GE_IICharacter::APortal_GE_IICharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 	RootComponent = GetCapsuleComponent();
-	RootComponent->SetRelativeRotation(FRotator(0,0,0));
+	RootComponent->SetRelativeRotation(FRotator(0, 0, 0));
 
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
@@ -50,8 +49,8 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 	Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh3P"));
 	Mesh3P->SetOwnerNoSee(true);
 	Mesh3P->SetupAttachment(RootComponent);
-	Mesh3P->SetRelativeLocation(FVector(0,0,-90));
-	Mesh3P->SetRelativeRotation(FRotator(0,-90,0));
+	Mesh3P->SetRelativeLocation(FVector(0, 0, -90));
+	Mesh3P->SetRelativeRotation(FRotator(0, -90, 0));
 
 	// Create a gun mesh component
 	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
@@ -62,12 +61,12 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 
 	// Create a gun mesh component
 	FP_Gun3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun3Person"));
-	FP_Gun3P->SetOwnerNoSee(true);			
+	FP_Gun3P->SetOwnerNoSee(true);
 	FP_Gun3P->SetupAttachment(RootComponent);
 	FP_Gun3P->SetupAttachment(Mesh3P);
 	FP_Gun3P->AttachToComponent(Mesh3P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
 	FP_Gun3P->SetRelativeLocation(FVector(-11, 6, -2));
-	FP_Gun3P->SetRelativeRotation(FRotator(	0, 100, 0));
+	FP_Gun3P->SetRelativeRotation(FRotator(0, 100, 0));
 
 
 	FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
@@ -76,6 +75,8 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 
 	// Default offset from the character location for projectiles to spawn
 	GunOffset = FVector(100.0f, 0.0f, 10.0f);
+
+	SetReplicates(true);
 }
 
 void APortal_GE_IICharacter::BeginPlay()
@@ -87,7 +88,7 @@ void APortal_GE_IICharacter::BeginPlay()
 	{
 		asGameMode = Cast<APortalGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
 	}
-	
+
 	bCanShoot = false;
 	bCanShootPortal = false;
 
@@ -107,7 +108,11 @@ void APortal_GE_IICharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	bCanPortalSpawn = CanPortalSpawn(lineCastLength, acceptableTag, portalWidth, portalHeight);
 
+	FString tempString = bCanShoot ? "can shoot: true" :  "can shoot: false";
+	GEngine->AddOnScreenDebugMessage(-1, 0.01f, FColor::Red, TEXT(""));
+
 }
+#pragma endregion
 
 bool APortal_GE_IICharacter::CanPortalSpawn(float fLinecastLength, FName sTag, float fPortalWidth, float fPortalHeight)
 {
@@ -222,16 +227,18 @@ void APortal_GE_IICharacter::OnFireLeft()
 					bCanPortalSpawn ? spawnedProjectile->bCanPortalSpawn = true : spawnedProjectile->bCanPortalSpawn = false; // allows the portal to spawn
 					spawnedProjectile->bPortalTypeToSpawn = true; // Blue Portal
 				}	
-				
+				//normal weapon properties
 				if (iWeaponType != iPortalGunIndex)
 				{
 					//set bullet properties
-					spawnedProjectile->GetBulletParameters(iWeaponType);
+					spawnedProjectile->SetBulletParameters(iWeaponType);
 					//decrement ammo
 					iAmmoAmount -= 1;
+					SR_PlayerShotBullet(this);
 					if (iAmmoAmount <= 0)
 					{
 						bCanShoot = false;
+						SR_SetCanShoot(this, false);
 					}
 				}
 			}
@@ -333,7 +340,8 @@ void APortal_GE_IICharacter::LookUpAtRate(float Rate)
 #pragma endregion
 
 #pragma region Server
-void APortal_GE_IICharacter::RequestGunFromServer(int32 WeaponTypePayload, APortal_GE_IICharacter* charRef)
+//triggers both local and server side gun spawn and property assignment
+void APortal_GE_IICharacter::RequestGun(int32 WeaponTypePayload, APortal_GE_IICharacter* charRef)
 {
 	//if its not the portal gun
 	if (WeaponTypePayload == iPortalGunIndex)
@@ -341,13 +349,24 @@ void APortal_GE_IICharacter::RequestGunFromServer(int32 WeaponTypePayload, APort
 		//this is the portal Gun
 		if (HasAuthority())
 		{
-
 			//activate player can shoot
 			charRef->SetCanShoot(true);
+
+			//update the variable in client
+			OnRep_UpdateCanShoot();
+
 			//allows the gun to shoot portals
 			charRef->SetCanShootPortals(true);
+
+			//update the variable in client
+			OnRep_UpdateCanShootPortal();
+
 			//set weapon type
 			charRef->SetWeaponType(WeaponTypePayload);
+
+			//update the variable in client
+			OnRep_UpdateWeaponType();
+
 			//change gun color
 			charRef->ChangeGunColor(asGameMode->GetWeaponColor(WeaponTypePayload));
 			//portal gun has no ammo
@@ -355,47 +374,69 @@ void APortal_GE_IICharacter::RequestGunFromServer(int32 WeaponTypePayload, APort
 		else
 		{
 			//rpc
-			GivePlayerAGun(WeaponTypePayload, charRef);
+			SR_GivePlayerAGun(WeaponTypePayload, charRef);
 		}
 	}
 	else
 	{
-		
 		if (HasAuthority())
 		{
-
 			//activate player can shoot
 			charRef->SetCanShoot(true);
+			//update the variable in client
+			OnRep_UpdateCanShoot();
+
 			//allows the gun to shoot portals
 			charRef->SetCanShootPortals(false);
+			//update the variable in client
+			OnRep_UpdateCanShootPortal();
+
 			//set weapon type
 			charRef->SetWeaponType(WeaponTypePayload);
+			//update the variable in client
+			OnRep_UpdateWeaponType();
+
 			//change gun color
+			//value replicated in blueprint since this is not logic
 			charRef->ChangeGunColor(asGameMode->GetWeaponColor(WeaponTypePayload));
+
 			//add ammo
 			charRef->SetAmmoAmount(asGameMode->GetWeaponAmmoAmount(WeaponTypePayload));
+			OnRep_UpdateAmmoAmount();
 		}
 		else
 		{
 			//rpc
-			GivePlayerAGun(WeaponTypePayload, charRef);
+			SR_GivePlayerAGun(WeaponTypePayload, charRef);
 		}
 	}
 }
-void APortal_GE_IICharacter::GivePlayerAGun_Implementation(int32 weaponTypePayload, APortal_GE_IICharacter* charRef)
+
+//give the character a gun
+void APortal_GE_IICharacter::SR_GivePlayerAGun_Implementation(int32 weaponTypePayload, APortal_GE_IICharacter* charRef)
 {
 	if (weaponTypePayload == iPortalGunIndex)
 	{
 		//this is the portal Gun
 		
-
-
 		//activate player can shoot
 		charRef->SetCanShoot(true);
+
+		//update the variable in client
+		OnRep_UpdateCanShoot();
+
 		//allows the gun to shoot portals
 		charRef->SetCanShootPortals(true);
+
+		//update the variable in client
+		OnRep_UpdateCanShootPortal();
+
 		//set weapon type
 		charRef->SetWeaponType(weaponTypePayload);
+
+		//update the variable in client
+		OnRep_UpdateWeaponType();
+
 		//change gun color
 		charRef->ChangeGunColor(asGameMode->GetWeaponColor(weaponTypePayload));
 		//portal gun has no ammo
@@ -404,17 +445,91 @@ void APortal_GE_IICharacter::GivePlayerAGun_Implementation(int32 weaponTypePaylo
 	{
 		//activate player can shoot
 		charRef->SetCanShoot(true);
+		//update the variable in client
+		OnRep_UpdateCanShoot();
+
 		//allows the gun to shoot portals
 		charRef->SetCanShootPortals(false);
+		//update the variable in client
+		OnRep_UpdateCanShootPortal();
+
 		//set weapon type
 		charRef->SetWeaponType(weaponTypePayload);
+		//update the variable in client
+		OnRep_UpdateWeaponType();
+
 		//change gun color
+		//value replicated in blueprint since this is not logic
 		charRef->ChangeGunColor(asGameMode->GetWeaponColor(weaponTypePayload));
+
 		//add ammo
 		charRef->SetAmmoAmount(asGameMode->GetWeaponAmmoAmount(weaponTypePayload));
+		OnRep_UpdateAmmoAmount();
 	}
 	
 }
+
+//set ammo amount server side
+void APortal_GE_IICharacter::SR_PlayerShotBullet_Implementation(APortal_GE_IICharacter* charRef)
+{
+	charRef->SetAmmoAmount(charRef->GetAmmoAmount() - 1);
+}
+
+//set bCanShoot server side
+void APortal_GE_IICharacter::SR_SetCanShoot_Implementation(APortal_GE_IICharacter* charRef, bool payload)
+{
+	charRef->SetCanShoot(payload);
+}
 #pragma endregion
 
+#pragma region Replication
 
+void APortal_GE_IICharacter::OnRep_UpdateCanShoot()
+{
+	// Logs
+	if (bCanShoot)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnRep_Notify .............. APortal_GE_IICharacter::bCanShoot ----> True"))
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnRep_Notify .............. APortal_GE_IICharacter::bCanShoot ----> False"))
+	}
+}
+
+void APortal_GE_IICharacter::OnRep_UpdateCanShootPortal()
+{
+	//logs
+	if (bCanShootPortal)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnRep_Notify .............. APortal_GE_IICharacter::bCanShootPortal ----> True"))
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnRep_Notify .............. APortal_GE_IICharacter::bCanShootPortal ----> False"))
+	}
+}
+
+void APortal_GE_IICharacter::OnRep_UpdateWeaponType()
+{
+	//logs
+	
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_Notify .............. APortal_GE_IICharacter::iWeaponType ----> %d "), iWeaponType);
+}
+
+void APortal_GE_IICharacter::OnRep_UpdateAmmoAmount()
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_Notify .............. APortal_GE_IICharacter::iAmmoAmount ----> %d "), iAmmoAmount);
+}
+
+void APortal_GE_IICharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(APortal_GE_IICharacter, bCanShoot);
+	DOREPLIFETIME(APortal_GE_IICharacter, bCanShootPortal);
+	DOREPLIFETIME(APortal_GE_IICharacter, iWeaponType);
+	DOREPLIFETIME(APortal_GE_IICharacter, iAmmoAmount);
+}
+
+#pragma endregion

@@ -72,14 +72,11 @@ private:
 	/** Pawn mesh: 3rd person view (full mesh ) */
 	UPROPERTY(BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USkeletalMeshComponent* Mesh3P;
+
 	/** Gun mesh: 1st person view (seen only by self) */
 	UPROPERTY(BlueprintReadWrite, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USkeletalMeshComponent* FP_Gun;
-public:
-	USkeletalMeshComponent* GetMesh1P() { return Mesh1P; }
-	USceneComponent* GetRootComponent() { return RootComponent; }
 
-private:
 	/** Gun mesh: 3st person view (seen only by self) */
 	UPROPERTY(BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USkeletalMeshComponent* FP_Gun3P;
@@ -94,6 +91,11 @@ private:
 public:
 	UPROPERTY(BlueprintReadWrite)
 		UMovementComponent* movementComp;
+
+	USkeletalMeshComponent* GetMesh1P() { return Mesh1P; }
+
+	USceneComponent* GetRootComponent() { return RootComponent; }
+	
 #pragma endregion
 
 protected:
@@ -125,15 +127,13 @@ protected:
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
 	void LookUpAtRate(float Rate);
-
-	bool bCanShoot;
-	bool bCanShootPortal;
 #pragma endregion
 
 public:
 #pragma region DefaultFunctions
 	/** Returns Mesh1P subobject **/
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 #pragma endregion
@@ -167,40 +167,82 @@ private:
 		bool bCanPortalSpawn;
 #pragma endregion
 
-public:
-	APortalGameMode* asGameMode;
 
-#pragma region Weapon
+#pragma region Multiplayer	
 private:
 	/*
 	* this value is 0 based
 	*/
-		UPROPERTY(EditDefaultsOnly, Category = "Weapon Type", meta = (AllowPrivateAccess = true))
-			int32 iPortalGunIndex;
-protected:
-	int32 iWeaponType;
-	int32 iAmmoAmount;
-public:
-	void RequestGunFromServer(int32 WeaponTypePayload, APortal_GE_IICharacter* charRef);
-	void SetWeaponType(int32 payload) { iWeaponType = payload; }
-	void SetCanShoot(bool payload) { bCanShoot = payload; }
-	void SetAmmoAmount(int32 ammoAmountPayload) { iAmmoAmount = ammoAmountPayload; }
-	void SetCanShootPortals(bool payload) { bCanShootPortal = payload; }
-protected:
-	UFUNCTION( BlueprintImplementableEvent )
-		void ChangeGunColor(FLinearColor colorToChangeTo);
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon Type", meta = (AllowPrivateAccess = true))
+		int32 iPortalGunIndex;
+
+	UPROPERTY( BlueprintReadOnly ,ReplicatedUsing = OnRep_UpdateCanShoot, meta = ( AllowPrivateAccess = true))
+		bool bCanShoot;
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_UpdateCanShootPortal, meta = (AllowPrivateAccess = true))
+		bool bCanShootPortal;
 
 protected:
-	/*
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_UpdateWeaponType)
+		int32 iWeaponType;
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_UpdateAmmoAmount)
+		int32 iAmmoAmount;
+
+	UFUNCTION(BlueprintImplementableEvent)
+		void ChangeGunColor(FLinearColor colorToChangeTo);
+
+/*
 * weapon type:
 *	0-> Assault Rifle
 *	1-> Shotgun
 *	2-> Rocket Launcher
 *	3-> Portal Gun
 */
-	UFUNCTION( Server, Reliable )
-	void GivePlayerAGun(int32 weaponTypePayload, APortal_GE_IICharacter* charRef);
+	UFUNCTION(Server, Reliable)
+		void SR_GivePlayerAGun(int32 weaponTypePayload, APortal_GE_IICharacter* charRef);
+
+	//decrements a bullet from the server side ammo count
+	UFUNCTION( Server, Reliable)
+		void SR_PlayerShotBullet(APortal_GE_IICharacter* charRef);
+
+	UFUNCTION( Server, Reliable)
+		void SR_SetCanShoot(APortal_GE_IICharacter* charRef, bool payload);
+
+public:
+	//game mode casting reference
+	APortalGameMode* asGameMode;
+
+	//Rep notify for each replicated variable
+	UFUNCTION()
+		void OnRep_UpdateCanShoot();
+
+	UFUNCTION()
+		void OnRep_UpdateCanShootPortal();
+
+	UFUNCTION()
+		void OnRep_UpdateWeaponType();
+
+	UFUNCTION()
+	void OnRep_UpdateAmmoAmount();
+
+	//requests a gun (triggers both locally and server side weapon spawn)
+	void RequestGun(int32 WeaponTypePayload, APortal_GE_IICharacter* charRef);
+
+	//set weapon parameters on spawn
+	void SetWeaponType(int32 payload) { iWeaponType = payload; }
+
+	void SetCanShoot(bool payload) { bCanShoot = payload; }
+
+	void SetAmmoAmount(int32 ammoAmountPayload) { iAmmoAmount = ammoAmountPayload; }
+
+	void SetCanShootPortals(bool payload) { bCanShootPortal = payload; }
+
+	//get parameters
+	int32 GetAmmoAmount() { return iAmmoAmount; }
+
+	// Variable replication
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 #pragma endregion
+
 };
-
-
