@@ -64,6 +64,7 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 	FP_Gun3P->SetOwnerNoSee(true);
 	FP_Gun3P->SetupAttachment(RootComponent);
 	FP_Gun3P->SetupAttachment(Mesh3P);
+	FP_Gun3P->AttachToComponent(Mesh3P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
 	FP_Gun3P->SetRelativeLocation(FVector(-11, 6, -2));
 	FP_Gun3P->SetRelativeRotation(FRotator(0, 100, 0));
 
