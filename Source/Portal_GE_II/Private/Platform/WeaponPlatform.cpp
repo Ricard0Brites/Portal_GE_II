@@ -16,6 +16,7 @@ AWeaponPlatform::AWeaponPlatform()
 	hologramMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon Mesh"));
 	hologramMesh->SetupAttachment(RootComponent);
 	hologramMesh->SetRelativeLocation(FVector(0,0,100));
+	hologramMesh->SetCollisionProfileName(FName("OverlapAllDynamic"));
 
 	boxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Collider"));
 	boxCollider->SetupAttachment(RootComponent);

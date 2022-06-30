@@ -62,7 +62,6 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 	// Create a gun mesh component
 	FP_Gun3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun3Person"));
 	FP_Gun3P->SetOwnerNoSee(true);
-	FP_Gun3P->SetupAttachment(RootComponent);
 	FP_Gun3P->SetupAttachment(Mesh3P);
 	FP_Gun3P->AttachToComponent(Mesh3P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
 	FP_Gun3P->SetRelativeLocation(FVector(-11, 6, -2));
@@ -214,13 +213,15 @@ void APortal_GE_IICharacter::OnFireLeft()
 				{
 					// spawn the projectile at the muzzle
 					spawnedProjectileLMB = GetWorld()->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass[iWeaponType], SpawnLocation, SpawnRotation);
-					
-					//set bullet owner, to run onrep_notify
-					spawnedProjectileRMB->SetOwner(asGameState);
 
 					//updates the variable value
 					//updates the projectile values too
 					OnRep_SpawnedProjectileLMB();
+					//decrement ammo
+					if (iAmmoAmount > 0)
+					{
+						HasAuthority() ? iAmmoAmount -= 1 : SR_PlayerShotBullet(this);
+					}
 				}
 				else
 				{
@@ -403,7 +404,6 @@ void APortal_GE_IICharacter::RequestGun(int32 WeaponTypePayload, APortal_GE_IICh
 	}
 }
 
-//give the character a gun
 void APortal_GE_IICharacter::SR_GivePlayerAGun_Implementation(int32 weaponTypePayload, APortal_GE_IICharacter* charRef)
 {
 	if (weaponTypePayload == iPortalGunIndex)
@@ -460,40 +460,33 @@ void APortal_GE_IICharacter::SR_GivePlayerAGun_Implementation(int32 weaponTypePa
 	
 }
 
-//set ammo amount server side
 void APortal_GE_IICharacter::SR_PlayerShotBullet_Implementation(APortal_GE_IICharacter* charRef)
 {
 	charRef->SetAmmoAmount(charRef->GetAmmoAmount() - 1);
 	charRef->OnRep_UpdateAmmoAmount();
 }
 
-//set bCanShoot server side
 void APortal_GE_IICharacter::SR_SetCanShoot_Implementation(APortal_GE_IICharacter* charRef, bool payload)
 {
 	charRef->SetCanShoot(payload);
 	charRef->OnRep_UpdateCanShoot();
 }
 
-void APortal_GE_IICharacter::SR_SpawnBullet_Implementation(
-	APortal_GE_IIProjectile* spawnedProjectilePayload,
-	TSubclassOf<APortal_GE_IIProjectile> projectileClassPayload,
-	FVector SpawnLocationPayload,
-	FRotator SpawnRotationPayload,
-	APortal_GE_IICharacter* characterReferencePayload)
+void APortal_GE_IICharacter::SR_SpawnBullet_Implementation(APortal_GE_IIProjectile* spawnedProjectilePayload, TSubclassOf<APortal_GE_IIProjectile> projectileClassPayload, FVector SpawnLocationPayload, FRotator SpawnRotationPayload, APortal_GE_IICharacter* characterReferencePayload)
 {
 	// spawn the projectile at the muzzle
 	characterReferencePayload->SetSpawnedProjectileLMB(GetWorld()->SpawnActor<APortal_GE_IIProjectile>(projectileClassPayload, SpawnLocationPayload, SpawnRotationPayload));
 
 	//update multiple values (see function)
 	OnRep_SpawnedProjectileLMB();
+
+	if (iAmmoAmount > 0)
+	{
+		HasAuthority() ? iAmmoAmount -= 1 : SR_PlayerShotBullet(this);
+	}
 }
 
-void APortal_GE_IICharacter::SR_SpawnPortalBullet_Implementation(
-	APortal_GE_IIProjectile* spawnedProjectilePayload,
-	TSubclassOf<APortal_GE_IIProjectile> projectileSubclassPayload,
-	FVector spawnLocationPayload,
-	FRotator spawnRotationPayload,
-	APortal_GE_IICharacter* charRefPayload)
+void APortal_GE_IICharacter::SR_SpawnPortalBullet_Implementation(APortal_GE_IIProjectile* spawnedProjectilePayload, TSubclassOf<APortal_GE_IIProjectile> projectileSubclassPayload, FVector spawnLocationPayload, FRotator spawnRotationPayload, APortal_GE_IICharacter* charRefPayload)
 {
 	charRefPayload->SetSpawnedProjectileRMB(GetWorld()->SpawnActor<APortal_GE_IIProjectile>(projectileSubclassPayload, spawnLocationPayload, spawnRotationPayload));
 	
@@ -567,18 +560,13 @@ void APortal_GE_IICharacter::OnRep_SpawnedProjectileLMB()
 			spawnedProjectileLMB->SetBulletParameters(iWeaponType);
 		}
 
-		//decrement ammo
-		if (iAmmoAmount > 0)
-		{
-			HasAuthority() ? iAmmoAmount -= 1 : SR_PlayerShotBullet(this);
-		}
-		// <= 1 because this is verified by the bullet, as such
-		if (!HasAuthority() && iAmmoAmount <= 1)
+		// <= 1 because this is verified by the bullet
+		if (HasAuthority() && iAmmoAmount <= 1)
 		{
 			//set can shoot
 			HasAuthority() ? bCanShoot = false : SR_SetCanShoot(this, false);
 		}
-		else if (HasAuthority() && iAmmoAmount <= 0)
+		else if (!HasAuthority() && iAmmoAmount <= 0)
 		{
 			//set can shoot
 			HasAuthority() ? bCanShoot = false : SR_SetCanShoot(this, false);
