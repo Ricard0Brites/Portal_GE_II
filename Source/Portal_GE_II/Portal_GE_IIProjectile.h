@@ -10,6 +10,7 @@
 #include "PortalGameState.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "net/UnrealNetwork.h"
 #include "Portal_GE_IIProjectile.generated.h"
 
 class USphereComponent;
@@ -48,16 +49,18 @@ public:
 #pragma endregion
 
 protected:
+
 #pragma region Components
 		/** Sphere collision component */
 		UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
 		USphereComponent* CollisionComp;
-
+public:
 	/** Projectile movement component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 		UProjectileMovementComponent* ProjectileMovement;
 #pragma endregion
 
+protected:
 	/** called when projectile hits something */
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
@@ -84,15 +87,23 @@ public:
 	void SetDamage(float Val) { fDamage = Val; }
 #pragma endregion
 
-
 #pragma region Multiplayer
 private:
-	UFUNCTION( Server, Reliable, BlueprintCallable )
+
+	UFUNCTION( Server, Reliable )
 		void SR_SpawnPortals(FVector location, bool portalType, FHitResult hitResult);
+
 	UFUNCTION(Server, Reliable)
-		void SR_GetBulletParams(int32 weaponTypeIndexPayload);
+		void SR_GetBulletParams(int32 weaponTypeIndexPayload, APortalGameState* gameStatePayload, APortal_GE_IIProjectile* projectileRef);
 public:
 	void SetBulletParameters(int32 weaponTypeIndexPayload);
+#pragma endregion
+
+#pragma region Replication
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
+
+	/*UFUNCTION()
+	 void OnRep_FDamage();*/
 #pragma endregion
 };
 

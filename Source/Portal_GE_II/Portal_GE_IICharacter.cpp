@@ -92,15 +92,12 @@ void APortal_GE_IICharacter::BeginPlay()
 	bCanShoot = false;
 	bCanShootPortal = false;
 
-	//request a gun from the server
-
 	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
 	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
 
 	// Show or hide the two versions of the gun based on whether or not we're using motion controllers.
 	Mesh1P->SetHiddenInGame(false, true);
-
-
+	
 }
 
 void APortal_GE_IICharacter::Tick(float DeltaTime)
@@ -213,42 +210,18 @@ void APortal_GE_IICharacter::OnFireLeft()
 				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
 
-				//Set Spawn Collision Handling Override
-				FActorSpawnParameters ActorSpawnParams;
-				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-
-				// spawn the projectile at the muzzle
-				APortal_GE_IIProjectile* spawnedProjectile = GetWorld()->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-				
-				//portal properties
-				spawnedProjectile->bCanPortalSpawn = false; //makes sure the portal isnt accidentally spawned
-				if (bCanShootPortal)
+				if(UKismetSystemLibrary::IsServer(GetWorld()))
 				{
-					bCanPortalSpawn ? spawnedProjectile->bCanPortalSpawn = true : spawnedProjectile->bCanPortalSpawn = false; // allows the portal to spawn
-					spawnedProjectile->bPortalTypeToSpawn = true; // Blue Portal
-				}	
-				//normal weapon properties
-				if (iWeaponType != iPortalGunIndex)
-				{
-					//set bullet properties
-					spawnedProjectile->SetBulletParameters(iWeaponType);
+					// spawn the projectile at the muzzle
+					spawnedProjectileLMB = GetWorld()->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
 					
-					//decrement ammo
-					if (iAmmoAmount > 0)
-					{
-						HasAuthority() ? iAmmoAmount -= 1 : SR_PlayerShotBullet(this);
-					}
-					// <= 1 because this is verified by the bullet, as such
-					if (!HasAuthority() && iAmmoAmount <= 1)
-					{
-						//set can shoot
-						HasAuthority() ? bCanShoot = false : SR_SetCanShoot(this, false);
-					}
-					else if(HasAuthority() && iAmmoAmount <= 0)
-					{
-						//set can shoot
-						HasAuthority() ? bCanShoot = false : SR_SetCanShoot(this, false);
-					}
+					//updates the variable value
+					//updates the projectile values too
+					OnRep_SpawnedProjectileLMB();
+				}
+				else
+				{
+					SR_SpawnBullet(spawnedProjectileLMB, ProjectileClass, SpawnLocation, SpawnRotation, this);
 				}
 			}
 		}
@@ -282,18 +255,24 @@ void APortal_GE_IICharacter::OnFireRight()
 			UWorld* const World = GetWorld();
 			if (World != nullptr)
 			{
+				//get the prespective rotation (where the player is looking towards)
 				const FRotator SpawnRotation = GetControlRotation();
+
 				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
 
-				//Set Spawn Collision Handling Override
-				FActorSpawnParameters ActorSpawnParams;
-				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-
 				// spawn the projectile at the muzzle
-				APortal_GE_IIProjectile* spawnedProjectile = World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-				bCanPortalSpawn ? spawnedProjectile->bCanPortalSpawn = true : spawnedProjectile->bCanPortalSpawn = false; // allows the portal to spawn
-				spawnedProjectile->bPortalTypeToSpawn = false; //Orange Portal
+				if (UKismetSystemLibrary::IsServer(GetWorld()))
+				{
+					//spawn bullet on server
+					spawnedProjectileRMB = World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
+				}
+				else
+				{
+					//spawn bullet on client
+					SR_SpawnPortalBullet(spawnedProjectileRMB, ProjectileClass, SpawnLocation, SpawnRotation, this);
+
+				}
 			}
 		}
 
@@ -491,6 +470,33 @@ void APortal_GE_IICharacter::SR_SetCanShoot_Implementation(APortal_GE_IICharacte
 	charRef->SetCanShoot(payload);
 	charRef->OnRep_UpdateCanShoot();
 }
+
+void APortal_GE_IICharacter::SR_SpawnBullet_Implementation(
+	APortal_GE_IIProjectile* spawnedProjectilePayload,
+	TSubclassOf<APortal_GE_IIProjectile> projectileClassPayload,
+	FVector SpawnLocationPayload,
+	FRotator SpawnRotationPayload,
+	APortal_GE_IICharacter* characterReferencePayload)
+{
+	// spawn the projectile at the muzzle
+	characterReferencePayload->SetSpawnedProjectileLMB(GetWorld()->SpawnActor<APortal_GE_IIProjectile>(projectileClassPayload, SpawnLocationPayload, SpawnRotationPayload));
+	OnRep_SpawnedProjectileLMB();
+}
+
+void APortal_GE_IICharacter::SR_SpawnPortalBullet_Implementation(
+	APortal_GE_IIProjectile* spawnedProjectilePayload,
+	TSubclassOf<APortal_GE_IIProjectile> projectileSubclassPayload,
+	FVector spawnLocationPayload,
+	FRotator spawnRotationPayload,
+	APortal_GE_IICharacter* charRefPayload)
+{
+	charRefPayload->SetSpawnedProjectileRMB(GetWorld()->SpawnActor<APortal_GE_IIProjectile>(projectileSubclassPayload, spawnLocationPayload, spawnRotationPayload));
+	
+	//update the value of the projectile reference
+	//update the values of the projectile
+	OnRep_SpawnedProjectileRMB();
+}
+
 #pragma endregion
 
 #pragma region Replication
@@ -533,6 +539,57 @@ void APortal_GE_IICharacter::OnRep_UpdateAmmoAmount()
 	UE_LOG(LogTemp, Warning, TEXT("OnRep_Notify .............. APortal_GE_IICharacter::iAmmoAmount ----> %d "), iAmmoAmount);
 }
 
+void APortal_GE_IICharacter::OnRep_SpawnedProjectileLMB()
+{
+	//portal properties
+	if (spawnedProjectileLMB != nullptr)
+	{
+		spawnedProjectileLMB->bCanPortalSpawn = false; //makes sure the portal isnt accidentally spawned
+	}
+	
+
+	if (bCanShootPortal && spawnedProjectileLMB != nullptr)
+	{
+		bCanPortalSpawn ? spawnedProjectileLMB->bCanPortalSpawn = true : spawnedProjectileLMB->bCanPortalSpawn = false; // allows the portal to spawn
+		spawnedProjectileLMB->bPortalTypeToSpawn = true; // Blue Portal
+	}
+	//normal weapon properties
+	if (iWeaponType != iPortalGunIndex)
+	{
+		//set bullet properties
+		if (spawnedProjectileLMB != nullptr)
+		{
+			spawnedProjectileLMB->SetBulletParameters(iWeaponType);
+		}
+
+		//decrement ammo
+		if (iAmmoAmount > 0)
+		{
+			HasAuthority() ? iAmmoAmount -= 1 : SR_PlayerShotBullet(this);
+		}
+		// <= 1 because this is verified by the bullet, as such
+		if (!HasAuthority() && iAmmoAmount <= 1)
+		{
+			//set can shoot
+			HasAuthority() ? bCanShoot = false : SR_SetCanShoot(this, false);
+		}
+		else if (HasAuthority() && iAmmoAmount <= 0)
+		{
+			//set can shoot
+			HasAuthority() ? bCanShoot = false : SR_SetCanShoot(this, false);
+		}
+	}
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_Notify .............. APortal_GE_IICharacter::spawnedProjectileLMB"));
+}
+
+void APortal_GE_IICharacter::OnRep_SpawnedProjectileRMB()
+{
+	// portal parameters
+	bCanPortalSpawn ? spawnedProjectileRMB->bCanPortalSpawn = true : spawnedProjectileRMB->bCanPortalSpawn = false; // allows the portal to spawn
+	spawnedProjectileRMB->bPortalTypeToSpawn = false; //Orange Portal
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_Notify .............. APortal_GE_IICharacter::spawnedProjectileRMB"));
+}
+
 void APortal_GE_IICharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -541,6 +598,8 @@ void APortal_GE_IICharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 	DOREPLIFETIME(APortal_GE_IICharacter, bCanShootPortal);
 	DOREPLIFETIME(APortal_GE_IICharacter, iWeaponType);
 	DOREPLIFETIME(APortal_GE_IICharacter, iAmmoAmount);
+	DOREPLIFETIME(APortal_GE_IICharacter, spawnedProjectileLMB);
+	DOREPLIFETIME(APortal_GE_IICharacter, spawnedProjectileRMB);
 }
 
 #pragma endregion

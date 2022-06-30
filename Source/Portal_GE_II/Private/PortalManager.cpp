@@ -184,8 +184,16 @@ void APortalManager::SetOtherCanTeleport(APortalClass* portalRef, bool payload)
 	}
 	
 }
-
 #pragma endregion
+
+#pragma region PortalReplication
+
+void APortalManager::SpawnPortalOnAllClients_Implementation(FVector location, bool portalType, APortalManager* portalManagerRef, FHitResult hit)
+{
+	portalManagerRef->SpawnPortal(portalType, location, hit);
+}
+#pragma endregion
+
 
 #pragma region Math
 float APortalManager::GetVectorLength(FVector payload)
@@ -193,5 +201,3 @@ float APortalManager::GetVectorLength(FVector payload)
 	return UKismetMathLibrary::Sqrt((UKismetMathLibrary::Square(payload.X)) + (UKismetMathLibrary::Square(payload.Y)) + (UKismetMathLibrary::Square(payload.Z)));
 }
 #pragma endregion
-
-

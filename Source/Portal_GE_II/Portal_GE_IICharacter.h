@@ -9,6 +9,7 @@
 #include "Math/UnrealMathUtility.h"
 #include "GameFramework/MovementComponent.h"
 #include "Public/PortalGameState.h"
+#include "Engine/World.h"
 #include "Portal_GE_IICharacter.generated.h"
 
 class UInputComponent;
@@ -19,7 +20,7 @@ class UMotionControllerComponent;
 class UAnimMontage;
 class USoundBase;
 class APortalGameState;
-
+class UWorld;
 
 
 UCLASS(config=Game)
@@ -33,6 +34,19 @@ public:
 protected:
 	virtual void BeginPlay();
 	virtual void Tick(float DeltaTime);
+
+private:
+
+#pragma region BulletSpawning
+	UPROPERTY( ReplicatedUsing = OnRep_SpawnedProjectileLMB )
+		APortal_GE_IIProjectile* spawnedProjectileLMB;
+	UPROPERTY( ReplicatedUsing = OnRep_SpawnedProjectileLMB )
+		APortal_GE_IIProjectile* spawnedProjectileRMB;
+
+public:
+	void SetSpawnedProjectileLMB(APortal_GE_IIProjectile* projectilePayload) { spawnedProjectileLMB = projectilePayload; }
+	void SetSpawnedProjectileRMB(APortal_GE_IIProjectile* projectilePayload) { spawnedProjectileRMB = projectilePayload; }
+#pragma endregion
 
 public:
 #pragma region Default
@@ -209,6 +223,22 @@ protected:
 
 	UFUNCTION( Server, Reliable)
 		void SR_SetCanShoot(APortal_GE_IICharacter* charRef, bool payload);
+	UFUNCTION( Server, Reliable)
+		void SR_SpawnBullet(
+			APortal_GE_IIProjectile* spawnedProjectilePayload,
+			TSubclassOf<APortal_GE_IIProjectile> projectileClassPayload,
+			FVector SpawnLocationPayload,
+			FRotator spawnRotationPayload,
+			APortal_GE_IICharacter* characterReferencePayload
+		);
+	UFUNCTION(Server, Reliable)
+		void SR_SpawnPortalBullet(
+			APortal_GE_IIProjectile* spawnedProjectilePayload,
+			TSubclassOf<APortal_GE_IIProjectile> projectileSubclassPayload,
+			FVector spawnLocationPayload,
+			FRotator spawnRotationPayload,
+			APortal_GE_IICharacter* charRefPayload
+			);
 
 public:
 	//game mode casting reference
@@ -225,7 +255,13 @@ public:
 		void OnRep_UpdateWeaponType();
 
 	UFUNCTION()
-	void OnRep_UpdateAmmoAmount();
+		void OnRep_UpdateAmmoAmount();
+
+	UFUNCTION()
+		void OnRep_SpawnedProjectileLMB();
+
+	UFUNCTION()
+		void OnRep_SpawnedProjectileRMB();
 
 	//requests a gun (triggers both locally and server side weapon spawn)
 	void RequestGun(int32 WeaponTypePayload, APortal_GE_IICharacter* charRef);

@@ -111,4 +111,10 @@ public:
 	void SetOtherCanTeleport(APortalClass* portalRef, bool payload);
 #pragma endregion
 
+#pragma region PortalReplication
+	//replicates the portals in all clients with the same location and orientation
+	UFUNCTION(NetMulticast, Unreliable)
+		void SpawnPortalOnAllClients(FVector location, bool portalType, APortalManager* portalManagerRef, FHitResult hit);
+
+#pragma endregion
 };

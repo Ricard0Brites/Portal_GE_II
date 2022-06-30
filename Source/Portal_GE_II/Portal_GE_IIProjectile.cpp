@@ -28,14 +28,17 @@ APortal_GE_IIProjectile::APortal_GE_IIProjectile()
 
 	// Die after 3 seconds by default
 	InitialLifeSpan = 3.0f;
+
+	bReplicates = true;
 }
 
 void APortal_GE_IIProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	SetOwner(gameStateRef);
+	
 	asGameState = Cast<APortalGameState>(gameStateRef);
 	asPortalManager = Cast<APortalManager>(UGameplayStatics::GetActorOfClass(this, portalManagerBpRef));
+	SetOwner(asGameState);
 }
 
 void APortal_GE_IIProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -45,43 +48,60 @@ void APortal_GE_IIProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherA
 	{
 		if (Hit.GetActor()->ActorHasTag("Wall") && bCanPortalSpawn)
 		{
-			//call a  run-on-server function that calls a multi cast that spawns the portal in every client
-			SR_SpawnPortals(Hit.Location, bPortalTypeToSpawn, Hit);
-			
+			if (HasAuthority())
+			{
+				asPortalManager->SpawnPortalOnAllClients(Hit.Location, bPortalTypeToSpawn, asPortalManager, Hit);
+			}
+			else
+			{
+				//call a  run-on-server function that calls a multi cast that spawns the portal in every player
+				SR_SpawnPortals(Hit.Location, bPortalTypeToSpawn, Hit);
+			}
 			bCanPortalSpawn = false;
 		}
 		Destroy();
 	}
 }
 
+#pragma region BulletParameters
+
 void APortal_GE_IIProjectile::SR_SpawnPortals_Implementation(FVector location, bool portalType, FHitResult hitResult)
 {
-	if (HasAuthority())
-	{
-		asGameState->SpawnPortalOnAllClients(location, portalType, asPortalManager, hitResult);
-	}
+	asPortalManager->SpawnPortalOnAllClients(location, portalType, asPortalManager, hitResult);
+	UE_LOG(LogTemp, Error, TEXT("TEST"));
 }
 
-void APortal_GE_IIProjectile::SR_GetBulletParams_Implementation(int32 weaponTypeIndexPayload)
+void APortal_GE_IIProjectile::SR_GetBulletParams_Implementation(int32 weaponTypeIndexPayload, APortalGameState* gameStatePayload, APortal_GE_IIProjectile* projectileRef)
 {
-	/*SetDamage(asGameMode->GetWeaponDamage(weaponTypeIndexPayload));
-	ProjectileMovement->InitialSpeed = asGameMode->GetBulletSpeed(weaponTypeIndexPayload);
-	ProjectileMovement->ProjectileGravityScale = asGameMode->GetBulletGravityScale(weaponTypeIndexPayload);*/
+	projectileRef->SetDamage(gameStatePayload->GetWeaponDamage(weaponTypeIndexPayload));
+	projectileRef->ProjectileMovement->MaxSpeed = gameStatePayload->GetBulletSpeed(weaponTypeIndexPayload);
+	projectileRef->ProjectileMovement->ProjectileGravityScale = gameStatePayload->GetBulletGravityScale(weaponTypeIndexPayload);
 }
 
 void APortal_GE_IIProjectile::SetBulletParameters(int32 weaponTypeIndexPayload)
 {
 	if (HasAuthority())
 	{
-		/*if (asGameMode)
+		if (asGameState)
 		{
-			SetDamage(asGameMode->GetWeaponDamage(weaponTypeIndexPayload));
-			ProjectileMovement->InitialSpeed = asGameMode->GetBulletSpeed(weaponTypeIndexPayload);
-			ProjectileMovement->ProjectileGravityScale = asGameMode->GetBulletGravityScale(weaponTypeIndexPayload);
-		}*/
+			SetDamage(asGameState->GetWeaponDamage(weaponTypeIndexPayload));
+			ProjectileMovement->MaxSpeed = asGameState->GetBulletSpeed(weaponTypeIndexPayload);
+			ProjectileMovement->ProjectileGravityScale = asGameState->GetBulletGravityScale(weaponTypeIndexPayload);
+		}
 	}
 	else
 	{
-		SR_GetBulletParams(weaponTypeIndexPayload);
+		SR_GetBulletParams(weaponTypeIndexPayload, asGameState, this);
 	}
 }
+
+#pragma endregion
+
+#pragma region Replication
+void APortal_GE_IIProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+}
+
+#pragma endregion
