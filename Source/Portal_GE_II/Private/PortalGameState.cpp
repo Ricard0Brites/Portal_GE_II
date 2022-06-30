@@ -7,4 +7,3 @@ void APortalGameState::SpawnPortalOnAllClients_Implementation(FVector location, 
 {
 		portalManagerRef->SpawnPortal(portalType, location, hit);
 }
-

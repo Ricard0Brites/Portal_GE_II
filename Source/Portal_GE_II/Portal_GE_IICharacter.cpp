@@ -86,7 +86,7 @@ void APortal_GE_IICharacter::BeginPlay()
 
 	if (GetWorld())
 	{
-		asGameMode = Cast<APortalGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+		asGameState = Cast<APortalGameState>(UGameplayStatics::GetGameState(GetWorld()));
 	}
 
 	bCanShoot = false;
@@ -377,7 +377,7 @@ void APortal_GE_IICharacter::RequestGun(int32 WeaponTypePayload, APortal_GE_IICh
 			OnRep_UpdateWeaponType();
 
 			//change gun color
-			charRef->ChangeGunColor(asGameMode->GetWeaponColor(WeaponTypePayload));
+			charRef->ChangeGunColor(asGameState->GetWeaponColor(WeaponTypePayload));
 			//portal gun has no ammo
 		}
 		else
@@ -407,10 +407,10 @@ void APortal_GE_IICharacter::RequestGun(int32 WeaponTypePayload, APortal_GE_IICh
 
 			//change gun color
 			//value replicated in blueprint since this is not logic
-			charRef->ChangeGunColor(asGameMode->GetWeaponColor(WeaponTypePayload));
+			charRef->ChangeGunColor(asGameState->GetWeaponColor(WeaponTypePayload));
 
 			//add ammo
-			charRef->SetAmmoAmount(asGameMode->GetWeaponAmmoAmount(WeaponTypePayload));
+			charRef->SetAmmoAmount(asGameState->GetWeaponAmmoAmount(WeaponTypePayload));
 			OnRep_UpdateAmmoAmount();
 		}
 		else
@@ -447,7 +447,7 @@ void APortal_GE_IICharacter::SR_GivePlayerAGun_Implementation(int32 weaponTypePa
 		OnRep_UpdateWeaponType();
 
 		//change gun color
-		charRef->ChangeGunColor(asGameMode->GetWeaponColor(weaponTypePayload));
+		charRef->ChangeGunColor(asGameState->GetWeaponColor(weaponTypePayload));
 		//portal gun has no ammo
 	}
 	else
@@ -469,10 +469,10 @@ void APortal_GE_IICharacter::SR_GivePlayerAGun_Implementation(int32 weaponTypePa
 
 		//change gun color
 		//value replicated in blueprint since this is not logic
-		charRef->ChangeGunColor(asGameMode->GetWeaponColor(weaponTypePayload));
+		charRef->ChangeGunColor(asGameState->GetWeaponColor(weaponTypePayload));
 
 		//add ammo
-		charRef->SetAmmoAmount(asGameMode->GetWeaponAmmoAmount(weaponTypePayload));
+		charRef->SetAmmoAmount(asGameState->GetWeaponAmmoAmount(weaponTypePayload));
 		OnRep_UpdateAmmoAmount();
 	}
 	

@@ -36,6 +36,7 @@ public:
 	//the reference to the Subclass
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Portal", meta = (AllowPrivateAccess = true))
 		TSubclassOf<APortalManager> portalManagerBpRef;
+
 	// the reference to the actual portal BP
 	APortalManager* asPortalManager;
 
@@ -44,8 +45,6 @@ public:
 		AActor* gameStateRef;
 
 	APortalGameState* asGameState;
-
-	APortalGameMode* asGameMode;
 #pragma endregion
 
 protected:

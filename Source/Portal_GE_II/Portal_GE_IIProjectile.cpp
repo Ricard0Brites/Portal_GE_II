@@ -35,10 +35,6 @@ void APortal_GE_IIProjectile::BeginPlay()
 	Super::BeginPlay();
 	SetOwner(gameStateRef);
 	asGameState = Cast<APortalGameState>(gameStateRef);
-	if (GetWorld())
-	{
-		asGameMode = Cast<APortalGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
-	}
 	asPortalManager = Cast<APortalManager>(UGameplayStatics::GetActorOfClass(this, portalManagerBpRef));
 }
 
@@ -68,21 +64,21 @@ void APortal_GE_IIProjectile::SR_SpawnPortals_Implementation(FVector location, b
 
 void APortal_GE_IIProjectile::SR_GetBulletParams_Implementation(int32 weaponTypeIndexPayload)
 {
-	SetDamage(asGameMode->GetWeaponDamage(weaponTypeIndexPayload));
+	/*SetDamage(asGameMode->GetWeaponDamage(weaponTypeIndexPayload));
 	ProjectileMovement->InitialSpeed = asGameMode->GetBulletSpeed(weaponTypeIndexPayload);
-	ProjectileMovement->ProjectileGravityScale = asGameMode->GetBulletGravityScale(weaponTypeIndexPayload);
+	ProjectileMovement->ProjectileGravityScale = asGameMode->GetBulletGravityScale(weaponTypeIndexPayload);*/
 }
 
 void APortal_GE_IIProjectile::SetBulletParameters(int32 weaponTypeIndexPayload)
 {
 	if (HasAuthority())
 	{
-		if (asGameMode)
+		/*if (asGameMode)
 		{
 			SetDamage(asGameMode->GetWeaponDamage(weaponTypeIndexPayload));
 			ProjectileMovement->InitialSpeed = asGameMode->GetBulletSpeed(weaponTypeIndexPayload);
 			ProjectileMovement->ProjectileGravityScale = asGameMode->GetBulletGravityScale(weaponTypeIndexPayload);
-		}
+		}*/
 	}
 	else
 	{

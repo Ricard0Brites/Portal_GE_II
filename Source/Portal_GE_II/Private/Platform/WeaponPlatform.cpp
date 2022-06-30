@@ -34,11 +34,11 @@ void AWeaponPlatform::BeginPlay()
 	boxCollider->OnComponentBeginOverlap.AddDynamic(this, &AWeaponPlatform::OnBoxBeginOverlap);
 	if (GetWorld())
 	{
-		asGameMode = Cast<APortalGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+		asGameState = Cast<APortalGameState>(UGameplayStatics::GetGameState(GetWorld()));
 	}
-	if (asGameMode != nullptr)
+	if (asGameState != nullptr)
 	{
-		ChangeGunMeshColor(asGameMode->GetWeaponColor(iObjectType));
+		ChangeGunMeshColor(asGameState->GetWeaponColor(iObjectType));
 	}
 }
 

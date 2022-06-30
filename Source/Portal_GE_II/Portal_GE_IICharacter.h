@@ -8,7 +8,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Math/UnrealMathUtility.h"
 #include "GameFramework/MovementComponent.h"
-#include "Public/PortalGameMode.h"
+#include "Public/PortalGameState.h"
 #include "Portal_GE_IICharacter.generated.h"
 
 class UInputComponent;
@@ -18,8 +18,9 @@ class UCameraComponent;
 class UMotionControllerComponent;
 class UAnimMontage;
 class USoundBase;
+class APortalGameState;
 
-class APortalGameMode;
+
 
 UCLASS(config=Game)
 class APortal_GE_IICharacter : public ACharacter
@@ -168,7 +169,6 @@ private:
 
 #pragma endregion
 
-
 #pragma region Multiplayer	
 private:
 	/*
@@ -212,7 +212,7 @@ protected:
 
 public:
 	//game mode casting reference
-	APortalGameMode* asGameMode;
+	APortalGameState* asGameState;
 
 	//Rep notify for each replicated variable
 	UFUNCTION()

@@ -10,6 +10,7 @@
 #include "../Portal_GE_IICharacter.h"
 #include "PortalManager.generated.h"
 
+class APortal_GE_IICharacter;
 UCLASS()
 class PORTAL_GE_II_API APortalManager : public AActor
 {
