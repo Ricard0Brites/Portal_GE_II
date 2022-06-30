@@ -81,7 +81,7 @@ public:
 
 #pragma region MyParameters
 private:
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true));
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_FDamage, meta = (AllowPrivateAccess = true));
 	float fDamage;
 public:
 	void SetDamage(float Val) { fDamage = Val; }
@@ -102,8 +102,8 @@ public:
 #pragma region Replication
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 
-	/*UFUNCTION()
-	 void OnRep_FDamage();*/
+	UFUNCTION()
+		void OnRep_FDamage();
 #pragma endregion
 };
 

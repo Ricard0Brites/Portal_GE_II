@@ -38,7 +38,6 @@ void APortal_GE_IIProjectile::BeginPlay()
 	
 	asGameState = Cast<APortalGameState>(gameStateRef);
 	asPortalManager = Cast<APortalManager>(UGameplayStatics::GetActorOfClass(this, portalManagerBpRef));
-	SetOwner(asGameState);
 }
 
 void APortal_GE_IIProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -73,9 +72,10 @@ void APortal_GE_IIProjectile::SR_SpawnPortals_Implementation(FVector location, b
 
 void APortal_GE_IIProjectile::SR_GetBulletParams_Implementation(int32 weaponTypeIndexPayload, APortalGameState* gameStatePayload, APortal_GE_IIProjectile* projectileRef)
 {
-	projectileRef->SetDamage(gameStatePayload->GetWeaponDamage(weaponTypeIndexPayload));
-	projectileRef->ProjectileMovement->MaxSpeed = gameStatePayload->GetBulletSpeed(weaponTypeIndexPayload);
-	projectileRef->ProjectileMovement->ProjectileGravityScale = gameStatePayload->GetBulletGravityScale(weaponTypeIndexPayload);
+	SetDamage(gameStatePayload->GetWeaponDamage(weaponTypeIndexPayload));
+	ProjectileMovement->MaxSpeed = gameStatePayload->GetBulletSpeed(weaponTypeIndexPayload);
+	ProjectileMovement->ProjectileGravityScale = gameStatePayload->GetBulletGravityScale(weaponTypeIndexPayload);
+	OnRep_FDamage();
 }
 
 void APortal_GE_IIProjectile::SetBulletParameters(int32 weaponTypeIndexPayload)
@@ -87,10 +87,13 @@ void APortal_GE_IIProjectile::SetBulletParameters(int32 weaponTypeIndexPayload)
 			SetDamage(asGameState->GetWeaponDamage(weaponTypeIndexPayload));
 			ProjectileMovement->MaxSpeed = asGameState->GetBulletSpeed(weaponTypeIndexPayload);
 			ProjectileMovement->ProjectileGravityScale = asGameState->GetBulletGravityScale(weaponTypeIndexPayload);
+			OnRep_FDamage();
 		}
 	}
 	else
 	{
+		UGameplayStatics::GetPlayerController(GetWorld(), 0) != nullptr ? SetOwner(UGameplayStatics::GetPlayerController(GetWorld(), 0)) : 0;
+
 		SR_GetBulletParams(weaponTypeIndexPayload, asGameState, this);
 	}
 }
@@ -98,10 +101,18 @@ void APortal_GE_IIProjectile::SetBulletParameters(int32 weaponTypeIndexPayload)
 #pragma endregion
 
 #pragma region Replication
+
 void APortal_GE_IIProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(APortal_GE_IIProjectile, fDamage);
+}
+
+void APortal_GE_IIProjectile::OnRep_FDamage()
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_Notify .............. APortal_GE_IIProjectile::Fdamage ----> %f"), fDamage);
 }
 
 #pragma endregion

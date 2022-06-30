@@ -23,7 +23,7 @@ AWeaponPlatform::AWeaponPlatform()
 	boxCollider->SetRelativeLocation(FVector(0,0,60));
 	boxCollider->SetCollisionObjectType(ECC_WorldDynamic);
 
-	SetReplicates(true);
+	bReplicates = true;
 	
 }
 

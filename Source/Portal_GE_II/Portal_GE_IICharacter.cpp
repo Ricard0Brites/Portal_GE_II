@@ -64,7 +64,7 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 	FP_Gun3P->SetOwnerNoSee(true);
 	FP_Gun3P->SetupAttachment(RootComponent);
 	FP_Gun3P->SetupAttachment(Mesh3P);
-	FP_Gun3P->AttachToComponent(Mesh3P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
+	//FP_Gun3P->AttachToComponent(Mesh3P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
 	FP_Gun3P->SetRelativeLocation(FVector(-11, 6, -2));
 	FP_Gun3P->SetRelativeRotation(FRotator(0, 100, 0));
 
@@ -76,7 +76,7 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 	// Default offset from the character location for projectiles to spawn
 	GunOffset = FVector(100.0f, 0.0f, 10.0f);
 
-	SetReplicates(true);
+	bReplicates = true;
 }
 
 void APortal_GE_IICharacter::BeginPlay()
@@ -202,7 +202,7 @@ void APortal_GE_IICharacter::OnFireLeft()
 	if (bCanShoot)
 	{
 		// try and fire a projectile
-		if (ProjectileClass != nullptr)
+		if (ProjectileClass[iWeaponType] != nullptr)
 		{
 			if (GetWorld() != nullptr)
 			{
@@ -210,18 +210,21 @@ void APortal_GE_IICharacter::OnFireLeft()
 				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
 
-				if(UKismetSystemLibrary::IsServer(GetWorld()))
+				if(HasAuthority())
 				{
 					// spawn the projectile at the muzzle
-					spawnedProjectileLMB = GetWorld()->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
+					spawnedProjectileLMB = GetWorld()->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass[iWeaponType], SpawnLocation, SpawnRotation);
 					
+					//set bullet owner, to run onrep_notify
+					spawnedProjectileRMB->SetOwner(asGameState);
+
 					//updates the variable value
 					//updates the projectile values too
 					OnRep_SpawnedProjectileLMB();
 				}
 				else
 				{
-					SR_SpawnBullet(spawnedProjectileLMB, ProjectileClass, SpawnLocation, SpawnRotation, this);
+					SR_SpawnBullet(spawnedProjectileLMB, ProjectileClass[iWeaponType], SpawnLocation, SpawnRotation, this);
 				}
 			}
 		}
@@ -250,7 +253,7 @@ void APortal_GE_IICharacter::OnFireRight()
 	if (bCanShootPortal)
 	{
 		// try and fire a projectile
-		if (ProjectileClass != nullptr)
+		if (ProjectileClass[iWeaponType] != nullptr)
 		{
 			UWorld* const World = GetWorld();
 			if (World != nullptr)
@@ -262,15 +265,15 @@ void APortal_GE_IICharacter::OnFireRight()
 				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
 
 				// spawn the projectile at the muzzle
-				if (UKismetSystemLibrary::IsServer(GetWorld()))
+				if (HasAuthority())
 				{
 					//spawn bullet on server
-					spawnedProjectileRMB = World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
+					spawnedProjectileRMB = World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass[iWeaponType], SpawnLocation, SpawnRotation);
 				}
 				else
 				{
 					//spawn bullet on client
-					SR_SpawnPortalBullet(spawnedProjectileRMB, ProjectileClass, SpawnLocation, SpawnRotation, this);
+					SR_SpawnPortalBullet(spawnedProjectileRMB, ProjectileClass[iWeaponType], SpawnLocation, SpawnRotation, this);
 
 				}
 			}
@@ -480,6 +483,8 @@ void APortal_GE_IICharacter::SR_SpawnBullet_Implementation(
 {
 	// spawn the projectile at the muzzle
 	characterReferencePayload->SetSpawnedProjectileLMB(GetWorld()->SpawnActor<APortal_GE_IIProjectile>(projectileClassPayload, SpawnLocationPayload, SpawnRotationPayload));
+
+	//update multiple values (see function)
 	OnRep_SpawnedProjectileLMB();
 }
 
@@ -506,7 +511,7 @@ void APortal_GE_IICharacter::OnRep_UpdateCanShoot()
 	// Logs
 	if (bCanShoot)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("OnRep_Notify .............. APortal_GE_IICharacter::bCanShoot ----> True"))
+		 UE_LOG(LogTemp, Warning, TEXT("OnRep_Notify .............. APortal_GE_IICharacter::bCanShoot ----> True"))
 	}
 	else
 	{
