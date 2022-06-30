@@ -16,7 +16,7 @@ AWeaponPlatform::AWeaponPlatform()
 	hologramMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon Mesh"));
 	hologramMesh->SetupAttachment(RootComponent);
 	hologramMesh->SetRelativeLocation(FVector(0,0,100));
-	hologramMesh->SetCollisionProfileName(FName("OverlapAllDynamic"));
+	hologramMesh->SetCollisionProfileName(FName("NoCollision"));
 
 	boxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Collider"));
 	boxCollider->SetupAttachment(RootComponent);
@@ -56,6 +56,7 @@ void AWeaponPlatform::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComp, AAc
 	{
 		APortal_GE_IICharacter* asCharacter = Cast<APortal_GE_IICharacter>(OtherActor);
 		asCharacter->RequestGun(iObjectType, asCharacter);
+		asCharacter->SetCharacterHasWeapon(true);
 	}
 }
 

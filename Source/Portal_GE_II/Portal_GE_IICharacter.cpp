@@ -495,6 +495,11 @@ void APortal_GE_IICharacter::SR_SpawnPortalBullet_Implementation(APortal_GE_IIPr
 	OnRep_SpawnedProjectileRMB();
 }
 
+void APortal_GE_IICharacter::RequestAmmo(int32 iWeaponTypePayload)
+{
+	SetAmmoAmount(asGameState->GetWeaponAmmoAmount(iWeaponTypePayload));
+}
+
 #pragma endregion
 
 #pragma region Replication

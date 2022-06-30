@@ -26,28 +26,27 @@ protected:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-private:
-	UPROPERTY( EditDefaultsOnly, BlueprintReadWrite, Category = "Mesh",meta = ( AllowPrivateAccess = true ))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Mesh")
 		UStaticMeshComponent* platformMesh;
 
-	UPROPERTY( EditDefaultsOnly, BlueprintReadWrite, Category = "Mesh", meta = ( AllowPrivateAccess = true ))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Mesh")
 		UStaticMeshComponent* hologramMesh;
 
-	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Visuals", meta	= ( AllowPrivateAccess = true ))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visuals")
 		float fHologramRotationSpeed;
 
-	UPROPERTY( EditDefaultsOnly, BlueprintReadWrite, Category = "Collision", meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Collision")
 		UBoxComponent* boxCollider;
 
-	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Object Type", meta = (AllowPrivateAccess = true))
-		int32 iObjectType;
 
 	APortalGameState* asGameState;
 
 	UFUNCTION()
 		virtual void OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Object Type")
+		int32 iObjectType;
+
 	UFUNCTION(BlueprintImplementableEvent)
 		void ChangeGunMeshColor(FLinearColor ColorToChangeTo);
 };

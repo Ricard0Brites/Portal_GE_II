@@ -179,7 +179,13 @@ private:
 		bool bCanPortalSpawn;
 #pragma endregion
 
-#pragma region WeaponSling
+#pragma region Weapon
+
+	bool bHasWeapon;
+
+public:
+	void SetCharacterHasWeapon(bool payload) { bHasWeapon = payload; }
+	bool GetCharacterHasWeapon() { return bHasWeapon; }
 
 #pragma endregion
 
@@ -239,8 +245,10 @@ protected:
 			FRotator spawnRotationPayload,
 			APortal_GE_IICharacter* charRefPayload
 			);
-
 public:
+
+	void RequestAmmo(int32 iWeaponTypePayload);
+
 	//game mode casting reference
 	APortalGameState* asGameState;
 
@@ -271,12 +279,14 @@ public:
 
 	void SetCanShoot(bool payload) { bCanShoot = payload; }
 
-	void SetAmmoAmount(int32 ammoAmountPayload) { iAmmoAmount = ammoAmountPayload; }
+	void SetAmmoAmount(int32 ammoAmountPayload) { iAmmoAmount = ammoAmountPayload; OnRep_UpdateAmmoAmount(); }
 
 	void SetCanShootPortals(bool payload) { bCanShootPortal = payload; }
 
 	//get parameters
 	int32 GetAmmoAmount() { return iAmmoAmount; }
+
+	int32 GetWeaponType() { return iWeaponType; }
 
 	// Variable replication
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
