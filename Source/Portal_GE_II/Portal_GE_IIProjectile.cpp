@@ -67,7 +67,6 @@ void APortal_GE_IIProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherA
 void APortal_GE_IIProjectile::SR_SpawnPortals_Implementation(FVector location, bool portalType, FHitResult hitResult)
 {
 	asPortalManager->SpawnPortalOnAllClients(location, portalType, asPortalManager, hitResult);
-	UE_LOG(LogTemp, Error, TEXT("TEST"));
 }
 
 void APortal_GE_IIProjectile::SR_GetBulletParams_Implementation(int32 weaponTypeIndexPayload, APortalGameState* gameStatePayload, APortal_GE_IIProjectile* projectileRef)

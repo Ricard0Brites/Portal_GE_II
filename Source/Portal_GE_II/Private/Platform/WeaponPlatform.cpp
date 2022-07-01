@@ -2,7 +2,7 @@
 
 
 #include "Platform/WeaponPlatform.h"
-class APortalGameMode;
+class APortalGameState;
 
 // Sets default values
 AWeaponPlatform::AWeaponPlatform()
@@ -52,11 +52,49 @@ void AWeaponPlatform::Tick(float DeltaTime)
 
 void AWeaponPlatform::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (OtherActor->ActorHasTag("Character"))
+	APortal_GE_IICharacter* asCharacter = Cast<APortal_GE_IICharacter>(OtherActor);
+	
+	if (OtherActor->ActorHasTag("Character") && iObjectType != asCharacter->GetPortalGunIndex())
 	{
-		APortal_GE_IICharacter* asCharacter = Cast<APortal_GE_IICharacter>(OtherActor);
 		asCharacter->RequestGun(iObjectType, asCharacter);
 		asCharacter->SetCharacterHasWeapon(true);
+
+		if (HasAuthority())
+		{
+			MC_DisableAllHolograms();
+			MC_EnableAllHolograms(this);
+		}
+		else
+		{
+			SR_DisableHologram();
+			SR_EnableHologram(this);
+		}
 	}
 }
 
+void AWeaponPlatform::SR_DisableHologram_Implementation()
+{
+	MC_DisableAllHolograms();
+}
+
+void AWeaponPlatform::SR_EnableHologram_Implementation(AWeaponPlatform* weaponPlatformRefPayload)
+{
+	MC_EnableAllHolograms(weaponPlatformRefPayload);
+}
+
+void AWeaponPlatform::MC_DisableAllHolograms_Implementation()
+{
+	DisableHologramComponent();
+}
+
+void AWeaponPlatform::MC_EnableAllHolograms_Implementation(AWeaponPlatform* weaponPlatformRefPayload)
+{
+	APortalGameState* asGameStateLocal = Cast<APortalGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	weaponPlatformRefPayload->StartTimer(asGameStateLocal->GetPlatformCooldown(iObjectType));
+}
+
+void AWeaponPlatform::StartTimer(float timeInSeconds)
+{
+	FTimerHandle myHandle;
+	GetWorldTimerManager().SetTimer(myHandle, this, &AWeaponPlatform::EnableHologramComponent, timeInSeconds, false);
+}

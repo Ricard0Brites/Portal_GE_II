@@ -9,11 +9,21 @@ void AAmmoPlatform::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComp, AActo
 	if (asCharacter != nullptr && HasAuthority())
 	{
 		//requests ammo if its the server  (there is no need to request on the client -----> the value will update Automatically because of the onrep notify variable  )
-		if (asCharacter->GetWeaponType() == iObjectType && asCharacter->GetCharacterHasWeapon())
+		if (asCharacter->GetWeaponType() == iObjectType && asCharacter->GetCharacterHasWeapon() && iObjectType != asCharacter->GetPortalGunIndex())
 		{
 			asCharacter->RequestAmmo(iObjectType);
 			asCharacter->SetCanShoot(true);
-			UE_LOG(LogTemp, Warning, TEXT("OnOverlapBegin........AAmmoPlatform......Requesting Ammo"));
+			
+			if (HasAuthority())
+			{
+				MC_DisableAllHolograms();
+				MC_EnableAllHolograms(this);
+			}
+			else
+			{
+				SR_DisableHologram();
+				SR_EnableHologram(this);
+			}
 		}
 	}
 }

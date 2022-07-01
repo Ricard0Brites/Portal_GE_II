@@ -21,10 +21,18 @@ public:
 	AWeaponPlatform();
 
 protected:
+#pragma region Default
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+#pragma endregion
+
+#pragma region References
+	APortalGameState* asGameState;
+#pragma endregion
+
+#pragma region Components
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Mesh")
 		UStaticMeshComponent* platformMesh;
@@ -37,16 +45,41 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Collision")
 		UBoxComponent* boxCollider;
+#pragma endregion
+
+#pragma region Properties
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Object Type")
+		int32 iObjectType;
 
 
-	APortalGameState* asGameState;
+#pragma endregion
+
+
+	UFUNCTION(BlueprintImplementableEvent)
+		void ChangeGunMeshColor(FLinearColor ColorToChangeTo);
 
 	UFUNCTION()
 		virtual void OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Object Type")
-		int32 iObjectType;
+	UFUNCTION(BlueprintImplementableEvent)
+		void EnableHologramComponent();
 
 	UFUNCTION(BlueprintImplementableEvent)
-		void ChangeGunMeshColor(FLinearColor ColorToChangeTo);
+		void DisableHologramComponent();
+
+	UFUNCTION(Server, Reliable)
+		void SR_DisableHologram();
+
+	UFUNCTION(Server, Reliable)
+		void SR_EnableHologram(AWeaponPlatform* weaponPlatformRefPayload);
+
+public:
+	UFUNCTION(NetMulticast, Reliable)
+		void MC_DisableAllHolograms();
+
+	UFUNCTION(NetMulticast, Reliable)
+		void MC_EnableAllHolograms(AWeaponPlatform* weaponPlatformRefPayload);
+
+	void StartTimer(float timeInSeconds);
+
 };

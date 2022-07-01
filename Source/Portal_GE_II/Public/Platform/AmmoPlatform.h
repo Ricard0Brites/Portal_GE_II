@@ -14,5 +14,7 @@ class PORTAL_GE_II_API AAmmoPlatform : public AWeaponPlatform
 {
 	GENERATED_BODY()
 	
+protected:
 		virtual void OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
+		
 };

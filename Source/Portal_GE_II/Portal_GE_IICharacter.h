@@ -183,6 +183,8 @@ private:
 
 	bool bHasWeapon;
 
+
+
 public:
 	void SetCharacterHasWeapon(bool payload) { bHasWeapon = payload; }
 	bool GetCharacterHasWeapon() { return bHasWeapon; }
@@ -190,6 +192,7 @@ public:
 #pragma endregion
 
 #pragma region Multiplayer	
+
 private:
 	/*
 	* this value is 0 based
@@ -290,5 +293,7 @@ public:
 
 	// Variable replication
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
+
+	int32 GetPortalGunIndex() { return iPortalGunIndex; }
 #pragma endregion
 };
