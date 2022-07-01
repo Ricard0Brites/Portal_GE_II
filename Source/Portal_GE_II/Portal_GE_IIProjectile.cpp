@@ -58,7 +58,10 @@ void APortal_GE_IIProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherA
 			}
 			bCanPortalSpawn = false;
 		}
-		Destroy();
+		if (HasAuthority())
+		{
+			Destroy();
+		}
 	}
 }
 
@@ -71,28 +74,37 @@ void APortal_GE_IIProjectile::SR_SpawnPortals_Implementation(FVector location, b
 
 void APortal_GE_IIProjectile::SR_GetBulletParams_Implementation(int32 weaponTypeIndexPayload, APortalGameState* gameStatePayload, APortal_GE_IIProjectile* projectileRef)
 {
-	SetDamage(gameStatePayload->GetWeaponDamage(weaponTypeIndexPayload));
-	ProjectileMovement->MaxSpeed = gameStatePayload->GetBulletSpeed(weaponTypeIndexPayload);
-	ProjectileMovement->ProjectileGravityScale = gameStatePayload->GetBulletGravityScale(weaponTypeIndexPayload);
-	OnRep_FDamage();
+	projectileRef->SetDamage(gameStatePayload->GetWeaponDamage(weaponTypeIndexPayload));
+
+	//set bullet max speed
+	projectileRef->ProjectileMovement->MaxSpeed = asGameState->GetBulletSpeed(weaponTypeIndexPayload);
+
+	//set bullet gravity scale
+	projectileRef->ProjectileMovement->ProjectileGravityScale = asGameState->GetBulletGravityScale(weaponTypeIndexPayload);
+
+	projectileRef->OnRep_FDamage();
 }
 
 void APortal_GE_IIProjectile::SetBulletParameters(int32 weaponTypeIndexPayload)
 {
+	//set bullet max speed
+	ProjectileMovement->MaxSpeed = asGameState->GetBulletSpeed(weaponTypeIndexPayload);
+
+	//set bullet gravity scale
+	ProjectileMovement->ProjectileGravityScale = asGameState->GetBulletGravityScale(weaponTypeIndexPayload);
+
 	if (HasAuthority())
 	{
 		if (asGameState)
 		{
 			SetDamage(asGameState->GetWeaponDamage(weaponTypeIndexPayload));
-			ProjectileMovement->MaxSpeed = asGameState->GetBulletSpeed(weaponTypeIndexPayload);
-			ProjectileMovement->ProjectileGravityScale = asGameState->GetBulletGravityScale(weaponTypeIndexPayload);
+
 			OnRep_FDamage();
 		}
 	}
 	else
 	{
 		UGameplayStatics::GetPlayerController(GetWorld(), 0) != nullptr ? SetOwner(UGameplayStatics::GetPlayerController(GetWorld(), 0)) : 0;
-
 		SR_GetBulletParams(weaponTypeIndexPayload, asGameState, this);
 	}
 }
