@@ -216,7 +216,8 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 		void ChangeGunColor(FLinearColor colorToChangeTo);
 
-/*
+#pragma region ServerFunctions
+	/*
 * weapon type:
 *	0-> Assault Rifle
 *	1-> Shotgun
@@ -227,12 +228,12 @@ protected:
 		void SR_GivePlayerAGun(int32 weaponTypePayload, APortal_GE_IICharacter* charRef);
 
 	//decrements a bullet from the server side ammo count
-	UFUNCTION( Server, Reliable)
+	UFUNCTION(Server, Reliable)
 		void SR_PlayerShotBullet(APortal_GE_IICharacter* charRef);
 
-	UFUNCTION( Server, Reliable)
+	UFUNCTION(Server, Reliable)
 		void SR_SetCanShoot(APortal_GE_IICharacter* charRef, bool payload);
-	UFUNCTION( Server, Reliable)
+	UFUNCTION(Server, Reliable)
 		void SR_SpawnBullet(
 			APortal_GE_IIProjectile* spawnedProjectilePayload,
 			TSubclassOf<APortal_GE_IIProjectile> projectileClassPayload,
@@ -247,7 +248,9 @@ protected:
 			FVector spawnLocationPayload,
 			FRotator spawnRotationPayload,
 			APortal_GE_IICharacter* charRefPayload
-			);
+		);
+#pragma endregion
+
 public:
 
 	void RequestAmmo(int32 iWeaponTypePayload);
@@ -255,6 +258,7 @@ public:
 	//game mode casting reference
 	APortalGameState* asGameState;
 
+#pragma region OnRep
 	//Rep notify for each replicated variable
 	UFUNCTION()
 		void OnRep_UpdateCanShoot();
@@ -273,7 +277,9 @@ public:
 
 	UFUNCTION()
 		void OnRep_SpawnedProjectileRMB();
+#pragma endregion
 
+#pragma region Getters and Setters
 	//requests a gun (triggers both locally and server side weapon spawn)
 	void RequestGun(int32 WeaponTypePayload, APortal_GE_IICharacter* charRef);
 
@@ -295,5 +301,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 
 	int32 GetPortalGunIndex() { return iPortalGunIndex; }
+#pragma endregion
+
 #pragma endregion
 };
