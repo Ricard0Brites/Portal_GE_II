@@ -173,16 +173,6 @@ bool APortal_GE_IICharacter::CanPortalSpawn(float fLinecastLength, FName sTag, f
 	return false;
 }
 
-void APortal_GE_IICharacter::GetLifetimeReplicatedProps(TArray <FLifetimeProperty> & OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	//Replicate current health.
-	DOREPLIFETIME(APortal_GE_IICharacter, CurrentHealth);
-
-}
-
-
 #pragma region HealthSytem
 
 void APortal_GE_IICharacter::OnHealthUpdate()
@@ -223,7 +213,6 @@ void APortal_GE_IICharacter::OnHealthUpdate()
 	}
 }
 
-
 void  APortal_GE_IICharacter::OnRep_CurrentHealth()
 {
 	OnHealthUpdate();
@@ -245,7 +234,6 @@ float APortal_GE_IICharacter::TakeDamage(float DamageTaken, struct FDamageEvent 
 	return damageApplied;
 }
 #pragma endregion 
-
 
 #pragma region Input
 
@@ -677,6 +665,7 @@ void APortal_GE_IICharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 	DOREPLIFETIME(APortal_GE_IICharacter, iAmmoAmount);
 	DOREPLIFETIME(APortal_GE_IICharacter, spawnedProjectileLMB);
 	DOREPLIFETIME(APortal_GE_IICharacter, spawnedProjectileRMB);
+	DOREPLIFETIME(APortal_GE_IICharacter, CurrentHealth);
 }
 
 #pragma endregion
