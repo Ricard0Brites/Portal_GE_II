@@ -10,6 +10,7 @@
 #include "../Portal_GE_IICharacter.h"
 #include "PortalManager.generated.h"
 
+class APortal_GE_IICharacter;
 UCLASS()
 class PORTAL_GE_II_API APortalManager : public AActor
 {
@@ -44,12 +45,7 @@ public:
 	* PortalType = True ----> Blue portal
 	* PortalType = False ---> Orange Portal
 	*/
-	void SpawnPortal(bool bPortalType, FVector Location);
-
-	/*
-	* Portal Rotation Getter
-	*/
-	FRotator GetPortalSpawnRotation();
+	void SpawnPortal(bool bPortalType, FVector Location, FHitResult hit);
 #pragma endregion
 
 private:
@@ -115,4 +111,10 @@ public:
 	void SetOtherCanTeleport(APortalClass* portalRef, bool payload);
 #pragma endregion
 
+#pragma region PortalReplication
+	//replicates the portals in all clients with the same location and orientation
+	UFUNCTION(NetMulticast, Unreliable)
+		void SpawnPortalOnAllClients(FVector location, bool portalType, APortalManager* portalManagerRef, FHitResult hit);
+
+#pragma endregion
 };
