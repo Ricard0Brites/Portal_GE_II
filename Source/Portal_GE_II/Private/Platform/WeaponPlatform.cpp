@@ -2,6 +2,7 @@
 
 
 #include "Platform/WeaponPlatform.h"
+
 class APortalGameState;
 
 // Sets default values

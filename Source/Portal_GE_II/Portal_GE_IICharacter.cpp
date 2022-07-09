@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Portal_GE_IICharacter.h"
+
+#include "DrawDebugHelpers.h"
 #include "Portal_GE_IIProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -233,6 +235,66 @@ float APortal_GE_IICharacter::TakeDamage(float DamageTaken, struct FDamageEvent 
 	SetCurrentHealth(damageApplied);
 	return damageApplied;
 }
+
+void APortal_GE_IICharacter::Shoot()
+{
+	FVector Start = FP_MuzzleLocation->GetComponentLocation();
+	FVector End = Start + GetFirstPersonCameraComponent()->GetForwardVector() * 3000.0f;
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if(GetWorld()->LineTraceSingleByChannel(HitResult,Start,End,ECollisionChannel::ECC_Visibility, Params, FCollisionResponseParams()))
+	{
+		if(AActor* Actor = HitResult.GetActor())
+		{
+			UE_LOG(LogTemp,Warning,TEXT("i hit : %s"), *HitResult.GetActor()->GetName());
+			if(APortal_GE_IICharacter* Player = Cast<APortal_GE_IICharacter>(Actor))
+			{
+			 ServerShoot();
+			}
+		}
+	}
+
+	DrawDebugLine(GetWorld(),Start,End,FColor::Blue,false,3.0f);
+}
+
+void APortal_GE_IICharacter::ServerShoot_Implementation()
+{
+	if(HasAuthority())
+	{
+		FVector Start = FP_MuzzleLocation->GetComponentLocation();
+		FVector End = Start + GetFirstPersonCameraComponent()->GetForwardVector() * 3000.0f;
+
+		FHitResult HitResult;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+
+		if(GetWorld()->LineTraceSingleByChannel(HitResult,Start,End,ECollisionChannel::ECC_Visibility, Params, FCollisionResponseParams()))
+		{
+			if(AActor* Actor = HitResult.GetActor())
+			{
+				
+				if(APortal_GE_IICharacter* Player = Cast<APortal_GE_IICharacter>(Actor))
+				{
+					//Take Damage function video 8:50
+				}
+			}
+		}
+
+		DrawDebugLine(GetWorld(),Start,End,FColor::Blue,false,3.0f);
+	}
+
+
+	
+}
+
+bool APortal_GE_IICharacter::ServerShoot_Validate()
+{
+	return true;
+}
+
 #pragma endregion 
 
 #pragma region Input
@@ -276,9 +338,10 @@ void APortal_GE_IICharacter::OnFireLeft()
 				const FRotator SpawnRotation = GetControlRotation();
 				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
-
+				Shoot();
 				if(HasAuthority())
 				{
+					
 					// spawn the projectile at the muzzle
 					spawnedProjectileLMB = GetWorld()->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass[iWeaponType], SpawnLocation, SpawnRotation);
 
