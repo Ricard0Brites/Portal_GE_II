@@ -69,6 +69,21 @@ void AWeaponPlatform::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComp, AAc
 			SR_DisableHologram();
 			SR_EnableHologram(this);
 		}
+	}	else 
+	{
+		asCharacter->RequestGun(iObjectType, asCharacter);
+		asCharacter->SetCharacterHasWeapon(true);
+
+		if (HasAuthority())
+		{
+			MC_DisableAllHolograms();
+			MC_EnableAllHolograms(this);
+		}
+		else
+		{
+			SR_DisableHologram();
+			SR_EnableHologram(this);
+		}
 	}
 }
 
@@ -90,7 +105,10 @@ void AWeaponPlatform::MC_DisableAllHolograms_Implementation()
 void AWeaponPlatform::MC_EnableAllHolograms_Implementation(AWeaponPlatform* weaponPlatformRefPayload)
 {
 	APortalGameState* asGameStateLocal = Cast<APortalGameState>(UGameplayStatics::GetGameState(GetWorld()));
-	weaponPlatformRefPayload->StartTimer(asGameStateLocal->GetPlatformCooldown(iObjectType));
+	if(weaponPlatformRefPayload->iObjectType != 3)//mudar o 3 para o portalgunIndex do character
+	{
+		weaponPlatformRefPayload->StartTimer(asGameStateLocal->GetPlatformCooldown(iObjectType));
+	}
 }
 
 void AWeaponPlatform::StartTimer(float timeInSeconds)

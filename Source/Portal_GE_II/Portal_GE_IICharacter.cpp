@@ -272,6 +272,7 @@ void APortal_GE_IICharacter::OnFireLeft()
 		{
 			if (GetWorld() != nullptr)
 			{
+				//get the prespective rotation (where the player is looking towards)
 				const FRotator SpawnRotation = GetControlRotation();
 				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
@@ -323,12 +324,11 @@ void APortal_GE_IICharacter::OnFireRight()
 		// try and fire a projectile
 		if (ProjectileClass[iWeaponType] != nullptr)
 		{
-			UWorld* const World = GetWorld();
-			if (World != nullptr)
+		
+			if (GetWorld() != nullptr)
 			{
 				//get the prespective rotation (where the player is looking towards)
 				const FRotator SpawnRotation = GetControlRotation();
-
 				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
 
@@ -336,7 +336,8 @@ void APortal_GE_IICharacter::OnFireRight()
 				if (HasAuthority())
 				{
 					//spawn bullet on server
-					spawnedProjectileRMB = World->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass[iWeaponType], SpawnLocation, SpawnRotation);
+					spawnedProjectileRMB = GetWorld()->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass[iWeaponType], SpawnLocation, SpawnRotation);
+					OnRep_SpawnedProjectileRMB();
 				}
 				else
 				{
