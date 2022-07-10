@@ -9,6 +9,7 @@
 #include "Math/UnrealMathUtility.h"
 #include "GameFramework/MovementComponent.h"
 #include "Public/PortalGameState.h"
+#include "Components/CapsuleComponent.h"
 #include "Engine/World.h"
 #include "Portal_GE_IICharacter.generated.h"
 
@@ -101,9 +102,15 @@ private:
 	/** First person camera */
 	UPROPERTY(BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		UCameraComponent* FirstPersonCameraComponent;
+
+	
 public:
 	UPROPERTY(BlueprintReadWrite)
 		UMovementComponent* movementComp;
+
+	UPROPERTY(EditAnywhere, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
+		UCapsuleComponent* HeadCapsuleCollider;
+	
 
 	USkeletalMeshComponent* GetMesh1P() { return Mesh1P; }
 
@@ -257,12 +264,12 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 		void ChangeGunColor(FLinearColor colorToChangeTo);
 
-	void Shoot();
+	void Shoot(int32 iWeapon);
 	
 	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerShoot();
-	bool ServerShoot_Validate();
-	void ServerShoot_Implementation();
+	void ServerShoot(int32 iWeapon);
+	bool ServerShoot_Validate(int32 iWeapon);
+	void ServerShoot_Implementation(int32 iWeapon);
 
 #pragma region ServerFunctions
 	/*

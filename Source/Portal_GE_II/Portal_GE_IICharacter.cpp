@@ -79,6 +79,10 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 	FP_MuzzleLocation->SetupAttachment(FP_Gun);
 	FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));
 
+	HeadCapsuleCollider = CreateDefaultSubobject<UCapsuleComponent>(TEXT("HeadCapsuleCollider"));
+	
+	
+
 	// Default offset from the character location for projectiles to spawn
 	GunOffset = FVector(100.0f, 0.0f, 10.0f);
 
@@ -236,61 +240,90 @@ float APortal_GE_IICharacter::TakeDamage(float DamageTaken, struct FDamageEvent 
 	return damageApplied;
 }
 
-void APortal_GE_IICharacter::Shoot()
+void APortal_GE_IICharacter::Shoot(int32 iWeapon)
 {
-	FVector Start = FP_MuzzleLocation->GetComponentLocation();
-	FVector End = Start + GetFirstPersonCameraComponent()->GetForwardVector() * 3000.0f;
-
-	FHitResult HitResult;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-
-	if(GetWorld()->LineTraceSingleByChannel(HitResult,Start,End,ECollisionChannel::ECC_Visibility, Params, FCollisionResponseParams()))
+	switch (iWeaponType)
 	{
-		if(AActor* Actor = HitResult.GetActor())
+	case 0:
 		{
-			UE_LOG(LogTemp,Warning,TEXT("i hit : %s"), *HitResult.GetActor()->GetName());
-			if(APortal_GE_IICharacter* Player = Cast<APortal_GE_IICharacter>(Actor))
-			{
-			 ServerShoot();
-			}
-		}
-	}
+			FVector Start = FP_MuzzleLocation->GetComponentLocation();
+			FVector End = Start + GetFirstPersonCameraComponent()->GetForwardVector() * 3000.0f;
 
-	DrawDebugLine(GetWorld(),Start,End,FColor::Blue,false,3.0f);
+			FHitResult HitResult;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(this);
+
+			if(GetWorld()->LineTraceSingleByChannel(HitResult,Start,End,ECollisionChannel::ECC_Pawn, Params, FCollisionResponseParams()))
+			{
+				if(AActor* Actor = HitResult.GetActor())
+				{
+					UE_LOG(LogTemp,Warning,TEXT("i hit : %s"), *HitResult.GetActor()->GetName());
+					if(APortal_GE_IICharacter* Player = Cast<APortal_GE_IICharacter>(Actor))
+					{
+						ServerShoot(iWeapon);
+					}
+				}
+			}
+
+			DrawDebugLine(GetWorld(),Start,End,FColor::Blue,false,3.0f);
+		}
+		break;
+
+	default:
+		
+		break;
+	}
+	
 }
 
-void APortal_GE_IICharacter::ServerShoot_Implementation()
+void APortal_GE_IICharacter::ServerShoot_Implementation(int32 iWeapon)
 {
 	if(HasAuthority())
 	{
-		FVector Start = FP_MuzzleLocation->GetComponentLocation();
-		FVector End = Start + GetFirstPersonCameraComponent()->GetForwardVector() * 3000.0f;
-
-		FHitResult HitResult;
-		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(this);
-
-		if(GetWorld()->LineTraceSingleByChannel(HitResult,Start,End,ECollisionChannel::ECC_Visibility, Params, FCollisionResponseParams()))
+		switch (iWeapon)
 		{
-			if(AActor* Actor = HitResult.GetActor())
+		case 0:
 			{
-				
-				if(APortal_GE_IICharacter* Player = Cast<APortal_GE_IICharacter>(Actor))
-				{
-					//Take Damage function video 8:50
-				}
-			}
-		}
+				FVector Start = FP_MuzzleLocation->GetComponentLocation();
+				FVector End = Start + GetFirstPersonCameraComponent()->GetForwardVector() * 3000.0f;
 
-		DrawDebugLine(GetWorld(),Start,End,FColor::Blue,false,3.0f);
+				FHitResult HitResult;
+				FCollisionQueryParams Params;
+				Params.AddIgnoredActor(this);
+
+				if(GetWorld()->LineTraceSingleByChannel(HitResult,Start,End,ECollisionChannel::ECC_Pawn, Params, FCollisionResponseParams()))
+				{
+					if(AActor* Actor = HitResult.GetActor())
+					{
+						UE_LOG(LogTemp,Warning,TEXT("i hit : %s"), *HitResult.GetActor()->GetName());
+						
+						//in case for the actor body
+						if(APortal_GE_IICharacter* Player = Cast<APortal_GE_IICharacter>(Actor))
+						{
+							UGameplayStatics::ApplyPointDamage(HitResult.GetActor(), 0.1f,GetFirstPersonCameraComponent()->GetForwardVector() ,HitResult, GetInstigator()->Controller,this,UDamageType::StaticClass());
+						
+							
+						}
+					}
+				}
+			
+
+				DrawDebugLine(GetWorld(),Start,End,FColor::Blue,false,3.0f);
+			}
+			break;
+
+		default:
+		
+			break;
+		}
+	
 	}
 
 
 	
 }
 
-bool APortal_GE_IICharacter::ServerShoot_Validate()
+bool APortal_GE_IICharacter::ServerShoot_Validate(int32 iWeapon)
 {
 	return true;
 }
@@ -338,9 +371,10 @@ void APortal_GE_IICharacter::OnFireLeft()
 				const FRotator SpawnRotation = GetControlRotation();
 				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
-				Shoot();
+			
 				if(HasAuthority())
 				{
+					Shoot(iWeaponType);
 					
 					// spawn the projectile at the muzzle
 					spawnedProjectileLMB = GetWorld()->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass[iWeaponType], SpawnLocation, SpawnRotation);
@@ -356,6 +390,7 @@ void APortal_GE_IICharacter::OnFireLeft()
 				}
 				else
 				{
+					Shoot(iWeaponType);
 					SR_SpawnBullet(spawnedProjectileLMB, ProjectileClass[iWeaponType], SpawnLocation, SpawnRotation, this);
 				}
 			}
