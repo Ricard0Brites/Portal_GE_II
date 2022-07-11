@@ -17,6 +17,7 @@
 #include "Net/UnrealNetwork.h"
 #include "PortalManager.h"
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
@@ -27,6 +28,7 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth / 100;
+	RifleDamage = 0.3f;
 	
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
@@ -79,7 +81,7 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 	FP_MuzzleLocation->SetupAttachment(FP_Gun);
 	FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));
 
-	HeadCapsuleCollider = CreateDefaultSubobject<UCapsuleComponent>(TEXT("HeadCapsuleCollider"));
+	HeadHurtBox = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HeadShot"));
 	
 	
 
@@ -183,40 +185,29 @@ bool APortal_GE_IICharacter::CanPortalSpawn(float fLinecastLength, FName sTag, f
 
 void APortal_GE_IICharacter::OnHealthUpdate()
 {
-	//Client-specific functionality
-	if (IsLocallyControlled())
-	{
-		FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHealth);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
-
-		
-
-		if (CurrentHealth <= 0)
-		{
-			//	this->Destroy();
-			FString deathMessage = FString::Printf(TEXT("You have been killed."));
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
-		}
-	}
-
+	
 	//Server-specific functionality
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		FString healthMessage = FString::Printf(TEXT("%s now has %f health remaining."), *GetFName().ToString(), CurrentHealth);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
 
+		if(CurrentHealth <=0)
+		{
+			Die();	
+		}
 		
 	}
-	
 	//Functions that occur on all machines. 
-	 
-	
 	if (CurrentHealth <= 0)
 	{
-		this->Destroy();
-		//	FString deathMessage = FString::Printf(TEXT("You have been killed."));
-		//	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+		//in order for client to see ragdoll
+		this->Mesh3P->SetSimulatePhysics(true);
 	}
+
+	 
+	
+	
 }
 
 void  APortal_GE_IICharacter::OnRep_CurrentHealth()
@@ -236,7 +227,11 @@ void APortal_GE_IICharacter::SetCurrentHealth(float healthValue)
 float APortal_GE_IICharacter::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	float damageApplied = CurrentHealth - DamageTaken;
-	SetCurrentHealth(damageApplied);
+	if(damageApplied < 0)
+	{
+		damageApplied = 0;
+	}
+		SetCurrentHealth(damageApplied);
 	return damageApplied;
 }
 
@@ -293,14 +288,29 @@ void APortal_GE_IICharacter::ServerShoot_Implementation(int32 iWeapon)
 
 				if(GetWorld()->LineTraceSingleByChannel(HitResult,Start,End,ECollisionChannel::ECC_Pawn, Params, FCollisionResponseParams()))
 				{
+				//deteta o actor
 					if(AActor* Actor = HitResult.GetActor())
 					{
-						UE_LOG(LogTemp,Warning,TEXT("i hit : %s"), *HitResult.GetActor()->GetName());
+					//deteta componente
+						if(HitResult.GetComponent())
+						{
+							UE_LOG(LogTemp,Warning,TEXT("i hit component : %s"), *HitResult.GetComponent()->GetName());
+						
+						//deteta se componente tem a tag head
+							if(HitResult.GetComponent()->ComponentHasTag(FName(TEXT("head"))))
+							{
+							
+								UE_LOG(LogTemp,Warning,TEXT("i hit component with tag : %s"), *HitResult.GetComponent()->GetName());
+						
+							}
+						}
+					
+						UE_LOG(LogTemp,Warning,TEXT("i hit actor : %s"), *HitResult.GetActor()->GetName());
 						
 						//in case for the actor body
 						if(APortal_GE_IICharacter* Player = Cast<APortal_GE_IICharacter>(Actor))
 						{
-							UGameplayStatics::ApplyPointDamage(HitResult.GetActor(), 0.1f,GetFirstPersonCameraComponent()->GetForwardVector() ,HitResult, GetInstigator()->Controller,this,UDamageType::StaticClass());
+							UGameplayStatics::ApplyPointDamage(HitResult.GetActor(), RifleDamage,GetFirstPersonCameraComponent()->GetForwardVector() ,HitResult, GetInstigator()->Controller,this,UDamageType::StaticClass());
 						
 							
 						}
@@ -327,6 +337,42 @@ bool APortal_GE_IICharacter::ServerShoot_Validate(int32 iWeapon)
 {
 	return true;
 }
+
+
+void APortal_GE_IICharacter::Die()
+{
+	if(HasAuthority())
+	{
+		MultiDie();
+		//Start Destroy timer to remove actor from world
+		GetWorld()->GetTimerManager().SetTimer(DestroyHandle, this, &APortal_GE_IICharacter::CallDestroy, 5.0f, false);
+	}
+}
+
+void APortal_GE_IICharacter::CallDestroy()
+{
+	
+	Destroy();
+}
+
+void APortal_GE_IICharacter::MultiDie_Implementation()
+{
+	if(HasAuthority())
+	{
+		//Ragdoll
+		this->GetCharacterMovement()->DisableMovement();
+		//this->GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+		this->Mesh3P->SetSimulatePhysics(true);
+	}
+	
+}
+
+bool APortal_GE_IICharacter::MultiDie_Validate()
+{
+	return true;
+}
+
+
 
 #pragma endregion 
 

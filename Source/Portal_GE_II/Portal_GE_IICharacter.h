@@ -84,7 +84,7 @@ private:
 		USkeletalMeshComponent* Mesh1P;
 
 	/** Pawn mesh: 3rd person view (full mesh ) */
-	UPROPERTY(BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USkeletalMeshComponent* Mesh3P;
 
 	/** Gun mesh: 1st person view (seen only by self) */
@@ -108,8 +108,8 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 		UMovementComponent* movementComp;
 
-	UPROPERTY(EditAnywhere, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
-		UCapsuleComponent* HeadCapsuleCollider;
+	UPROPERTY(EditAnywhere,Category = Gameplay, meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* HeadHurtBox;
 	
 
 	USkeletalMeshComponent* GetMesh1P() { return Mesh1P; }
@@ -192,6 +192,8 @@ private:
 
 #pragma region Weapon
 
+	
+	
 	bool bHasWeapon;
 
 
@@ -245,7 +247,7 @@ private:
 	/*
 	* this value is 0 based
 	*/
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon Type", meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditDefaultsOnly, Category = "Weapons", meta = (AllowPrivateAccess = true))
 		int32 iPortalGunIndex;
 
 	UPROPERTY( BlueprintReadOnly ,ReplicatedUsing = OnRep_UpdateCanShoot, meta = ( AllowPrivateAccess = true))
@@ -261,6 +263,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_UpdateAmmoAmount)
 		int32 iAmmoAmount;
 
+	UPROPERTY(EditAnywhere, Category = "Weapons")
+		float RifleDamage;
+
 	UFUNCTION(BlueprintImplementableEvent)
 		void ChangeGunColor(FLinearColor colorToChangeTo);
 
@@ -270,6 +275,16 @@ protected:
 	void ServerShoot(int32 iWeapon);
 	bool ServerShoot_Validate(int32 iWeapon);
 	void ServerShoot_Implementation(int32 iWeapon);
+
+	void Die();
+	
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	    void MultiDie();
+	    bool MultiDie_Validate();
+	    void MultiDie_Implementation();
+
+FTimerHandle DestroyHandle;
+void CallDestroy();
 
 #pragma region ServerFunctions
 	/*
