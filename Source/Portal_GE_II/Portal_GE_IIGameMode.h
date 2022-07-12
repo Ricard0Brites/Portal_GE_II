@@ -13,6 +13,8 @@ class APortal_GE_IIGameMode : public AGameModeBase
 
 public:
 	APortal_GE_IIGameMode();
+
+
 };
 
 

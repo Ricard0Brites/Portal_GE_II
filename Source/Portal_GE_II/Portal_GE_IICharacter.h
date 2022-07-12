@@ -107,9 +107,6 @@ private:
 public:
 	UPROPERTY(BlueprintReadWrite)
 		UMovementComponent* movementComp;
-
-	UPROPERTY(EditAnywhere,Category = Gameplay, meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent* HeadHurtBox;
 	
 
 	USkeletalMeshComponent* GetMesh1P() { return Mesh1P; }
@@ -265,6 +262,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Weapons")
 		float RifleDamage;
+
+	UPROPERTY(EditAnywhere, Category = "Weapons")
+		float HeadShotMultiplier;
 
 	UFUNCTION(BlueprintImplementableEvent)
 		void ChangeGunColor(FLinearColor colorToChangeTo);
