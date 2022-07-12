@@ -286,7 +286,7 @@ void APortal_GE_IICharacter::ServerShoot_Implementation(int32 iWeapon)
 
 				FHitResult HitResult;
 				FCollisionQueryParams Params;
-				//Params.AddIgnoredActor(this);
+				Params.AddIgnoredActor(this);
 
 				if(GetWorld()->LineTraceSingleByChannel(HitResult,Start,End,ECollisionChannel::ECC_Camera, Params, FCollisionResponseParams()))
 				{
