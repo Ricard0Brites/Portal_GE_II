@@ -32,6 +32,7 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 	RifleDamage = 0.3f;
 	HeadShotMultiplier = 5.f;
 	
+	
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 	RootComponent = GetCapsuleComponent();
@@ -188,7 +189,6 @@ bool APortal_GE_IICharacter::CanPortalSpawn(float fLinecastLength, FName sTag, f
 void APortal_GE_IICharacter::OnHealthUpdate()
 {
 	
-	
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		
@@ -203,11 +203,9 @@ void APortal_GE_IICharacter::OnHealthUpdate()
 	{
 		//in order for client to see ragdoll
 		this->Mesh3P->SetSimulatePhysics(true);
+
 	}
 
-	 
-	
-	
 }
 
 void  APortal_GE_IICharacter::OnRep_CurrentHealth()
@@ -340,14 +338,23 @@ void APortal_GE_IICharacter::Die()
 	{
 		MultiDie();
 		AGameModeBase* GM = GetWorld()->GetAuthGameMode();
-		if(APortalGameMode* GameMode = Cast<APortalGameMode>(GM))
-		{
+		GameMode = Cast<APortalGameMode>(GM);
+		
+			
 			GameMode->Respawn(GetController());
-		}
+		//	GetWorld()->GetTimerManager().SetTimer(RespawnHandle, this, &APortal_GE_IICharacter::PlayerRespawn, 5.0f, false);
+
+		
 		//Start Destroy timer to remove actor from world
 		GetWorld()->GetTimerManager().SetTimer(DestroyHandle, this, &APortal_GE_IICharacter::CallDestroy, 5.0f, false);
 	}
 }
+
+void APortal_GE_IICharacter::PlayerRespawn()
+{
+	//GameMode->Respawn(GetController());
+}
+
 
 void APortal_GE_IICharacter::CallDestroy()
 {

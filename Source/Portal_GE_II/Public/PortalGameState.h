@@ -74,4 +74,12 @@ public:
 	void OnRep_WeaponType();
 #pragma endregion
 
+	UPROPERTY(BlueprintReadWrite, Category = "Gameplay")
+	int PlayerKills;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Gameplay")
+	int PlayerDeaths;
+
+	UFUNCTION()
+	void IncrementPlayerKills();
 };

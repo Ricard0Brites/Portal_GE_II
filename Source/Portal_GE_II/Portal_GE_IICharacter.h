@@ -11,6 +11,7 @@
 #include "Public/PortalGameState.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/World.h"
+#include "PortalGameMode.h"
 #include "Portal_GE_IICharacter.generated.h"
 
 class UInputComponent;
@@ -283,8 +284,13 @@ protected:
 	    bool MultiDie_Validate();
 	    void MultiDie_Implementation();
 
-FTimerHandle DestroyHandle;
-void CallDestroy();
+	FTimerHandle RespawnHandle;
+	void PlayerRespawn();
+
+	FTimerHandle DestroyHandle;
+	void CallDestroy();
+
+	APortalGameMode* GameMode;
 
 #pragma region ServerFunctions
 	/*

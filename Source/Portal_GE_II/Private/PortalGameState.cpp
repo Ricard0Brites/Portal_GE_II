@@ -56,6 +56,13 @@ void APortalGameState::OnRep_WeaponType()
 	UE_LOG(LogTemp, Warning, TEXT("OnRep_Notify .............. APortal_GE_IICharacter::iWeaponType[]"));
 }
 
+void APortalGameState::IncrementPlayerKills()
+{
+
+PlayerKills++;
+	
+}
+
 void APortalGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
