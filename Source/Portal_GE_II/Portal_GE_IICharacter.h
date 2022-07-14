@@ -9,7 +9,9 @@
 #include "Math/UnrealMathUtility.h"
 #include "GameFramework/MovementComponent.h"
 #include "Public/PortalGameState.h"
+#include "Components/CapsuleComponent.h"
 #include "Engine/World.h"
+#include "PortalGameMode.h"
 #include "Portal_GE_IICharacter.generated.h"
 
 class UInputComponent;
@@ -83,7 +85,7 @@ private:
 		USkeletalMeshComponent* Mesh1P;
 
 	/** Pawn mesh: 3rd person view (full mesh ) */
-	UPROPERTY(BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = true))
 		USkeletalMeshComponent* Mesh3P;
 
 	/** Gun mesh: 1st person view (seen only by self) */
@@ -101,9 +103,12 @@ private:
 	/** First person camera */
 	UPROPERTY(BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		UCameraComponent* FirstPersonCameraComponent;
+
+	
 public:
 	UPROPERTY(BlueprintReadWrite)
 		UMovementComponent* movementComp;
+	
 
 	USkeletalMeshComponent* GetMesh1P() { return Mesh1P; }
 
@@ -185,6 +190,8 @@ private:
 
 #pragma region Weapon
 
+	
+	
 	bool bHasWeapon;
 
 
@@ -211,6 +218,26 @@ protected:
 
 	/** Response to health being updated. Called on the server immediately after modification, and on clients in response to a RepNotify*/
 	void OnHealthUpdate();
+	
+public:
+
+	/** Getter for Max Health.*/
+	UFUNCTION(BlueprintPure, Category="Health")
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; } 
+
+	/** Getter for Current Health.*/
+	UFUNCTION(BlueprintPure, Category="Health")
+	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
+
+	/** Setter for Current Health. Clamps the value between 0 and MaxHealth and calls OnHealthUpdate. Should only be called on the server.*/
+	UFUNCTION(BlueprintCallable, Category="Health")
+	void SetCurrentHealth(float healthValue);
+
+	/** Event for taking damage. Overridden from APawn.*/
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	float TakeDamage( float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser ) override;
+
+#pragma endregion
 
 #pragma region Multiplayer	
 
@@ -218,7 +245,7 @@ private:
 	/*
 	* this value is 0 based
 	*/
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon Type", meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditDefaultsOnly, Category = "Weapons", meta = (AllowPrivateAccess = true))
 		int32 iPortalGunIndex;
 
 	UPROPERTY( BlueprintReadOnly ,ReplicatedUsing = OnRep_UpdateCanShoot, meta = ( AllowPrivateAccess = true))
@@ -234,8 +261,36 @@ protected:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_UpdateAmmoAmount)
 		int32 iAmmoAmount;
 
+	UPROPERTY(EditAnywhere, Category = "Weapons")
+		float RifleDamage;
+
+	UPROPERTY(EditAnywhere, Category = "Weapons")
+		float HeadShotMultiplier;
+
 	UFUNCTION(BlueprintImplementableEvent)
 		void ChangeGunColor(FLinearColor colorToChangeTo);
+
+	void Shoot(int32 iWeapon);
+	
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerShoot(int32 iWeapon);
+	bool ServerShoot_Validate(int32 iWeapon);
+	void ServerShoot_Implementation(int32 iWeapon);
+
+	void Die();
+	
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	    void MultiDie();
+	    bool MultiDie_Validate();
+	    void MultiDie_Implementation();
+
+	FTimerHandle RespawnHandle;
+	void PlayerRespawn();
+
+	FTimerHandle DestroyHandle;
+	void CallDestroy();
+
+	APortalGameMode* GameMode;
 
 #pragma region ServerFunctions
 	/*
@@ -245,6 +300,7 @@ protected:
 *	2-> Rocket Launcher
 *	3-> Portal Gun
 */
+public:
 	UFUNCTION(Server, Reliable)
 		void SR_GivePlayerAGun(int32 weaponTypePayload, APortal_GE_IICharacter* charRef);
 
@@ -271,24 +327,6 @@ protected:
 			APortal_GE_IICharacter* charRefPayload
 		);
 #pragma endregion
-
-public:
-
-	/** Getter for Max Health.*/
-	UFUNCTION(BlueprintPure, Category="Health")
-	FORCEINLINE float GetMaxHealth() const { return MaxHealth; } 
-
-	/** Getter for Current Health.*/
-	UFUNCTION(BlueprintPure, Category="Health")
-	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
-
-	/** Setter for Current Health. Clamps the value between 0 and MaxHealth and calls OnHealthUpdate. Should only be called on the server.*/
-	UFUNCTION(BlueprintCallable, Category="Health")
-	void SetCurrentHealth(float healthValue);
-
-	/** Event for taking damage. Overridden from APawn.*/
-	UFUNCTION(BlueprintCallable, Category = "Health")
-	float TakeDamage( float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser ) override;
 
 
 #pragma endregion
@@ -340,8 +378,9 @@ public:
 	// Variable replication
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 
+
 	int32 GetPortalGunIndex() { return iPortalGunIndex; }
 #pragma endregion
 
-#pragma endregion
+
 };

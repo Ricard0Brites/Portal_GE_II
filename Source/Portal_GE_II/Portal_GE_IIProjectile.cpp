@@ -45,7 +45,7 @@ void APortal_GE_IIProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherA
 	// Only add impulse and destroy projectile if we hit a physics
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
 	{
-		if (Hit.GetActor()->ActorHasTag("Wall") && bCanPortalSpawn)
+	if (Hit.GetActor()->ActorHasTag("Wall") && bCanPortalSpawn)
 		{
 			if (HasAuthority())
 			{
@@ -55,6 +55,7 @@ void APortal_GE_IIProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherA
 			{
 				//call a  run-on-server function that calls a multi cast that spawns the portal in every player
 				SR_SpawnPortals(Hit.Location, bPortalTypeToSpawn, Hit);
+				
 			}
 			bCanPortalSpawn = false;
 		}

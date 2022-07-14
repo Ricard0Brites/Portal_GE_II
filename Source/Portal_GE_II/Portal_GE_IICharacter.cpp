@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Portal_GE_IICharacter.h"
+
+#include "DrawDebugHelpers.h"
 #include "Portal_GE_IIProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -14,7 +16,9 @@
 #include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
 #include "PortalManager.h"
+#include "PortalGameMode.h"
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
@@ -25,6 +29,9 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth / 100;
+	RifleDamage = 0.3f;
+	HeadShotMultiplier = 5.f;
+	
 	
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
@@ -76,6 +83,10 @@ APortal_GE_IICharacter::APortal_GE_IICharacter()
 	FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
 	FP_MuzzleLocation->SetupAttachment(FP_Gun);
 	FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));
+
+
+	
+	
 
 	// Default offset from the character location for projectiles to spawn
 	GunOffset = FVector(100.0f, 0.0f, 10.0f);
@@ -177,40 +188,24 @@ bool APortal_GE_IICharacter::CanPortalSpawn(float fLinecastLength, FName sTag, f
 
 void APortal_GE_IICharacter::OnHealthUpdate()
 {
-	//Client-specific functionality
-	if (IsLocallyControlled())
-	{
-		FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHealth);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
-
-		
-
-		if (CurrentHealth <= 0)
-		{
-			//	this->Destroy();
-			FString deathMessage = FString::Printf(TEXT("You have been killed."));
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
-		}
-	}
-
-	//Server-specific functionality
+	
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		FString healthMessage = FString::Printf(TEXT("%s now has %f health remaining."), *GetFName().ToString(), CurrentHealth);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
-
+		
+		if(CurrentHealth <=0)
+		{
+			Die();	
+		}
 		
 	}
-	
-	//Functions that occur on all machines. 
-	 
 	
 	if (CurrentHealth <= 0)
 	{
-		this->Destroy();
-		//	FString deathMessage = FString::Printf(TEXT("You have been killed."));
-		//	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+		//in order for client to see ragdoll
+		this->Mesh3P->SetSimulatePhysics(true);
+
 	}
+
 }
 
 void  APortal_GE_IICharacter::OnRep_CurrentHealth()
@@ -230,9 +225,164 @@ void APortal_GE_IICharacter::SetCurrentHealth(float healthValue)
 float APortal_GE_IICharacter::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	float damageApplied = CurrentHealth - DamageTaken;
-	SetCurrentHealth(damageApplied);
+	if(damageApplied < 0)
+	{
+		damageApplied = 0;
+	}
+		SetCurrentHealth(damageApplied);
 	return damageApplied;
 }
+
+void APortal_GE_IICharacter::Shoot(int32 iWeapon)
+{
+	switch (iWeaponType)
+	{
+		//Rifle
+	case 0:
+		{
+			FVector Start = FP_MuzzleLocation->GetComponentLocation();
+			FVector End = Start + GetFirstPersonCameraComponent()->GetForwardVector() * 3000.0f;
+
+			FHitResult HitResult;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(this);
+
+			if(GetWorld()->LineTraceSingleByChannel(HitResult,Start,End,ECollisionChannel::ECC_Camera, Params, FCollisionResponseParams()))
+			{
+			
+				if(AActor* Actor = HitResult.GetActor())
+				{
+					UE_LOG(LogTemp,Warning,TEXT("Hit : %s"), *HitResult.GetActor()->GetName());
+					if(APortal_GE_IICharacter* Player = Cast<APortal_GE_IICharacter>(Actor))
+					{
+						ServerShoot(iWeapon);
+					}
+				}
+			}
+
+			DrawDebugLine(GetWorld(),Start,End,FColor::Blue,false,3.0f);
+		}
+		break;
+
+	default:
+		
+		break;
+	}
+	
+}
+
+void APortal_GE_IICharacter::ServerShoot_Implementation(int32 iWeapon)
+{
+	if(HasAuthority())
+	{
+		switch (iWeapon)
+		{
+		case 0:
+			{
+				FVector Start = FP_MuzzleLocation->GetComponentLocation();
+				FVector End = Start + GetFirstPersonCameraComponent()->GetForwardVector() * 3000.0f;
+
+				FHitResult HitResult;
+				FCollisionQueryParams Params;
+				Params.AddIgnoredActor(this);
+
+				if(GetWorld()->LineTraceSingleByChannel(HitResult,Start,End,ECollisionChannel::ECC_Camera, Params, FCollisionResponseParams()))
+				{
+					
+				//if actor hit
+					if(AActor* Actor = HitResult.GetActor())
+					{
+						//headshot
+						if(HitResult.BoneName.IsEqual("head"))
+						{
+							FString hsMsg = FString::Printf(TEXT("HEADSHOT!!"));
+							GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, hsMsg);
+
+						
+							UGameplayStatics::ApplyPointDamage(HitResult.GetActor(), (RifleDamage * HeadShotMultiplier),GetFirstPersonCameraComponent()->GetForwardVector() ,HitResult, GetController(),this,UDamageType::StaticClass());
+						}
+						//actor body
+						else
+						{
+							UGameplayStatics::ApplyPointDamage(HitResult.GetActor(), RifleDamage,GetFirstPersonCameraComponent()->GetForwardVector() ,HitResult, GetController(),this,UDamageType::StaticClass());
+						
+						}
+					}
+				}
+			
+
+				DrawDebugLine(GetWorld(),Start,End,FColor::Blue,false,3.0f);
+			}
+			break;
+
+		default:
+		
+			break;
+		}
+	
+	}
+
+
+	
+}
+
+bool APortal_GE_IICharacter::ServerShoot_Validate(int32 iWeapon)
+{
+	return true;
+}
+
+
+void APortal_GE_IICharacter::Die()
+{
+	if(HasAuthority())
+	{
+		MultiDie();
+		AGameModeBase* GM = GetWorld()->GetAuthGameMode();
+		GameMode = Cast<APortalGameMode>(GM);
+		
+			
+			GameMode->Respawn(GetController());
+		//	GetWorld()->GetTimerManager().SetTimer(RespawnHandle, this, &APortal_GE_IICharacter::PlayerRespawn, 5.0f, false);
+
+		
+		//Start Destroy timer to remove actor from world
+		GetWorld()->GetTimerManager().SetTimer(DestroyHandle, this, &APortal_GE_IICharacter::CallDestroy, 5.0f, false);
+	}
+}
+
+void APortal_GE_IICharacter::PlayerRespawn()
+{
+	//GameMode->Respawn(GetController());
+}
+
+
+void APortal_GE_IICharacter::CallDestroy()
+{
+	
+	Destroy();
+}
+
+void APortal_GE_IICharacter::MultiDie_Implementation()
+{
+	if(HasAuthority())
+	{
+		//Disable Inputs
+		this->GetCharacterMovement()->DisableMovement();
+		//Disable collision
+		GetCapsuleComponent()->DestroyComponent();
+		//Ragdoll
+		this->Mesh3P->SetSimulatePhysics(true);
+	}
+	
+}
+
+bool APortal_GE_IICharacter::MultiDie_Validate()
+{
+	return true;
+}
+
+
+
 #pragma endregion 
 
 #pragma region Input
@@ -276,9 +426,11 @@ void APortal_GE_IICharacter::OnFireLeft()
 				const FRotator SpawnRotation = GetControlRotation();
 				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
-
+			
 				if(HasAuthority())
 				{
+					Shoot(iWeaponType);
+					
 					// spawn the projectile at the muzzle
 					spawnedProjectileLMB = GetWorld()->SpawnActor<APortal_GE_IIProjectile>(ProjectileClass[iWeaponType], SpawnLocation, SpawnRotation);
 
@@ -293,6 +445,7 @@ void APortal_GE_IICharacter::OnFireLeft()
 				}
 				else
 				{
+					Shoot(iWeaponType);
 					SR_SpawnBullet(spawnedProjectileLMB, ProjectileClass[iWeaponType], SpawnLocation, SpawnRotation, this);
 				}
 			}
